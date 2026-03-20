@@ -33,13 +33,13 @@
     "generation_success": 1.0,
     "estimated_e2e_success": 0.9398,
     "bottleneck_stage": "ocr",
-    "latency_seconds": 45.42,
-    "latency_per_field": 4.54
+    "latency_seconds": 42.01,
+    "latency_per_field": 4.2
   },
   "timing": {
-    "detection_s": 0.03,
-    "ocr_s": 9.33,
-    "llm_s": 36.06,
-    "total_s": 45.42
+    "detection_s": 0.02,
+    "ocr_s": 7.51,
+    "llm_s": 34.47,
+    "total_s": 42.01
   }
 }

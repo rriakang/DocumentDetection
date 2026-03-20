@@ -202,11 +202,9 @@ def run_e2e_eval(gt_path: str, language: str = "en"):
 
     for pi, gi in matched:
         bbox = pred_boxes[pi]
-        crop = image.crop((
-            max(0, bbox[0]), max(0, bbox[1] - 2),
-            min(image.width, bbox[2]), min(image.height, bbox[3] + 2),
-        ))
-        ocr_result = extract_row_label_and_content(crop)
+        ocr_result = extract_row_label_and_content(
+            image=image, row_bbox=bbox, full_image=image,
+        )
         ocr_labels.append(ocr_result["label"])
         gt_label_list.append(gt_rows[gi]["label_ko"])
 
