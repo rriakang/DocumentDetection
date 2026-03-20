@@ -1,0 +1,45 @@
+{
+  "gt_file": "eval/ground_truth/complex_form.json",
+  "language": "en",
+  "detection": {
+    "precision": 0.8333,
+    "recall": 1.0,
+    "f1": 0.9091,
+    "mean_iou": 1.0,
+    "row_count_error": 2,
+    "mean_boundary_error_px": 0.0,
+    "tp": 10,
+    "fp": 2,
+    "fn": 0
+  },
+  "ocr": {
+    "cer": 0.0602,
+    "ned": 0.9398,
+    "anls": 0.9398,
+    "exact_match": 0.7,
+    "n_evaluated": 10,
+    "n_gt": 10
+  },
+  "generation": {
+    "field_name_translation_ned": 0.7933,
+    "field_name_ko_accuracy": 0.7,
+    "description_anls": 0.2532,
+    "json_success_rate": 1.0,
+    "n_evaluated": 10
+  },
+  "end_to_end": {
+    "detection_recall": 1.0,
+    "ocr_anls": 0.9398,
+    "generation_success": 1.0,
+    "estimated_e2e_success": 0.9398,
+    "bottleneck_stage": "ocr",
+    "latency_seconds": 45.42,
+    "latency_per_field": 4.54
+  },
+  "timing": {
+    "detection_s": 0.03,
+    "ocr_s": 9.33,
+    "llm_s": 36.06,
+    "total_s": 45.42
+  }
+}

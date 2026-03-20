@@ -1,0 +1,97 @@
+{
+  "image_path": "eval/images/complex_form.png",
+  "form_type": "intern_work_experience",
+  "description": "인턴형 일경험 참여신청서 (복합 필드 + 체크박스 테스트)",
+  "rows": [
+    {
+      "id": 1,
+      "bbox": [0, 80, 800, 125],
+      "label_ko": "성명",
+      "label_en": "Name",
+      "description_en": "Write your full legal name.",
+      "has_content": false,
+      "example_en": "Kim Minjun"
+    },
+    {
+      "id": 2,
+      "bbox": [0, 125, 800, 170],
+      "label_ko": "주소",
+      "label_en": "Address",
+      "description_en": "Write your current residential address.",
+      "has_content": false,
+      "example_en": "Seoul Gangnam-gu Yeoksam-dong 123"
+    },
+    {
+      "id": 3,
+      "bbox": [0, 170, 800, 215],
+      "label_ko": "연락처",
+      "label_en": "Contact Information",
+      "description_en": "Write your mobile phone number and email address.",
+      "has_content": false,
+      "example_en": "010-1234-5678, email@example.com"
+    },
+    {
+      "id": 4,
+      "bbox": [0, 215, 800, 325],
+      "label_ko": "학교명",
+      "label_en": "School Name",
+      "description_en": "Select your school type and write the school name and department.",
+      "has_content": false,
+      "example_en": "Korea University, Computer Science"
+    },
+    {
+      "id": 5,
+      "bbox": [0, 325, 800, 370],
+      "label_ko": "희망직무",
+      "label_en": "Desired Job Type",
+      "description_en": "Select your preferred job category: Business/Admin, Advertising/Marketing, or IT.",
+      "has_content": false,
+      "example_en": "IT"
+    },
+    {
+      "id": 6,
+      "bbox": [0, 370, 800, 460],
+      "label_ko": "희망지역",
+      "label_en": "Preferred Region",
+      "description_en": "Select your preferred work region.",
+      "has_content": false,
+      "example_en": "Seoul"
+    },
+    {
+      "id": 7,
+      "bbox": [0, 460, 800, 550],
+      "label_ko": "일경험 참여이력",
+      "label_en": "Work Experience History",
+      "description_en": "Write your previous internship or work experience program history.",
+      "has_content": false,
+      "example_en": "Samsung SDS internship, 2024.07-2024.08"
+    },
+    {
+      "id": 8,
+      "bbox": [0, 550, 800, 600],
+      "label_ko": "자격/면허",
+      "label_en": "Qualifications/Licenses",
+      "description_en": "Write any relevant qualifications or licenses.",
+      "has_content": false,
+      "example_en": "TOEIC 900, Driver's License"
+    },
+    {
+      "id": 9,
+      "bbox": [0, 600, 800, 680],
+      "label_ko": "개인정보 제공 동의 여부",
+      "label_en": "Consent to Personal Information",
+      "description_en": "Select whether you agree to provide personal information: Agree or Disagree.",
+      "has_content": false,
+      "example_en": "Agree"
+    },
+    {
+      "id": 10,
+      "bbox": [0, 680, 800, 730],
+      "label_ko": "신청인",
+      "label_en": "Applicant",
+      "description_en": "Sign or stamp your name here.",
+      "has_content": false,
+      "example_en": "Kim Minjun (signature)"
+    }
+  ]
+}

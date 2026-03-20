@@ -1,0 +1,45 @@
+{
+  "gt_file": "eval/ground_truth/synth_form_01.json",
+  "language": "en",
+  "detection": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "mean_iou": 0.875,
+    "row_count_error": 0,
+    "mean_boundary_error_px": 0.0,
+    "tp": 7,
+    "fp": 0,
+    "fn": 0
+  },
+  "ocr": {
+    "cer": 0.0,
+    "ned": 1.0,
+    "anls": 1.0,
+    "exact_match": 1.0,
+    "n_evaluated": 7,
+    "n_gt": 7
+  },
+  "generation": {
+    "field_name_translation_ned": 0.9481,
+    "field_name_ko_accuracy": 1.0,
+    "description_anls": 0.4981,
+    "json_success_rate": 1.0,
+    "n_evaluated": 7
+  },
+  "end_to_end": {
+    "detection_recall": 1.0,
+    "ocr_anls": 1.0,
+    "generation_success": 1.0,
+    "estimated_e2e_success": 1.0,
+    "bottleneck_stage": "detection",
+    "latency_seconds": 35.42,
+    "latency_per_field": 5.06
+  },
+  "timing": {
+    "detection_s": 0.02,
+    "ocr_s": 6.59,
+    "llm_s": 28.81,
+    "total_s": 35.42
+  }
+}

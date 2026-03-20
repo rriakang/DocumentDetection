@@ -1,0 +1,84 @@
+{
+  "image_path": "eval/images/sample_form_01.png",
+  "form_type": "immigration",
+  "description": "외국인등록 신청서 (Alien Registration Application)",
+  "rows": [
+    {
+      "id": 1,
+      "bbox": [0, 100, 800, 145],
+      "label_ko": "성명",
+      "label_en": "Name",
+      "label_zh": "姓名",
+      "label_vi": "Họ và tên",
+      "description_en": "Write your full legal name as it appears on your passport.",
+      "example_en": "John Smith",
+      "has_content": false
+    },
+    {
+      "id": 2,
+      "bbox": [0, 145, 800, 190],
+      "label_ko": "국적",
+      "label_en": "Nationality",
+      "label_zh": "国籍",
+      "label_vi": "Quốc tịch",
+      "description_en": "Write your country of citizenship.",
+      "example_en": "United States",
+      "has_content": false
+    },
+    {
+      "id": 3,
+      "bbox": [0, 190, 800, 240],
+      "label_ko": "생년월일",
+      "label_en": "Date of Birth",
+      "label_zh": "出生年月日",
+      "label_vi": "Ngày sinh",
+      "description_en": "Write your date of birth in YYYY-MM-DD format.",
+      "example_en": "1990-01-15",
+      "has_content": false
+    },
+    {
+      "id": 4,
+      "bbox": [0, 240, 800, 290],
+      "label_ko": "여권번호",
+      "label_en": "Passport Number",
+      "label_zh": "护照号码",
+      "label_vi": "Số hộ chiếu",
+      "description_en": "Write your passport number exactly as shown on your passport.",
+      "example_en": "M12345678",
+      "has_content": false
+    },
+    {
+      "id": 5,
+      "bbox": [0, 290, 800, 340],
+      "label_ko": "체류자격",
+      "label_en": "Visa Status",
+      "label_zh": "签证类型",
+      "label_vi": "Tư cách lưu trú",
+      "description_en": "Write your current visa type or status.",
+      "example_en": "E-7 (Special Occupation)",
+      "has_content": false
+    },
+    {
+      "id": 6,
+      "bbox": [0, 340, 800, 395],
+      "label_ko": "주소",
+      "label_en": "Address",
+      "label_zh": "地址",
+      "label_vi": "Địa chỉ",
+      "description_en": "Write your current residential address in Korea.",
+      "example_en": "Seoul, Gangnam-gu, Yeoksam-dong 123-45",
+      "has_content": false
+    },
+    {
+      "id": 7,
+      "bbox": [0, 395, 800, 440],
+      "label_ko": "전화번호",
+      "label_en": "Phone Number",
+      "label_zh": "电话号码",
+      "label_vi": "Số điện thoại",
+      "description_en": "Write your Korean phone number.",
+      "example_en": "010-1234-5678",
+      "has_content": false
+    }
+  ]
+}

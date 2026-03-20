@@ -1,0 +1,105 @@
+{
+  "image_path": "eval/images/synth_form_01.png",
+  "form_type": "alien_registration",
+  "description": "외국인등록 신청서 (합성 테스트)",
+  "rows": [
+    {
+      "id": 1,
+      "bbox": [
+        50,
+        50,
+        750,
+        105
+      ],
+      "label_ko": "성명",
+      "label_en": "Name",
+      "description_en": "Write your full legal name as it appears on your passport.",
+      "has_content": false,
+      "example_en": "John Smith"
+    },
+    {
+      "id": 2,
+      "bbox": [
+        50,
+        105,
+        750,
+        160
+      ],
+      "label_ko": "국적",
+      "label_en": "Nationality",
+      "description_en": "Write your country of citizenship.",
+      "has_content": false,
+      "example_en": "United States"
+    },
+    {
+      "id": 3,
+      "bbox": [
+        50,
+        160,
+        750,
+        215
+      ],
+      "label_ko": "생년월일",
+      "label_en": "Date of Birth",
+      "description_en": "Write your date of birth in YYYY-MM-DD format.",
+      "has_content": false,
+      "example_en": "1990-01-15"
+    },
+    {
+      "id": 4,
+      "bbox": [
+        50,
+        215,
+        750,
+        270
+      ],
+      "label_ko": "여권번호",
+      "label_en": "Passport Number",
+      "description_en": "Write your passport number exactly as shown on your passport.",
+      "has_content": false,
+      "example_en": "M12345678"
+    },
+    {
+      "id": 5,
+      "bbox": [
+        50,
+        270,
+        750,
+        325
+      ],
+      "label_ko": "체류자격",
+      "label_en": "Visa Status",
+      "description_en": "Write your current visa type or status.",
+      "has_content": false,
+      "example_en": "E-7"
+    },
+    {
+      "id": 6,
+      "bbox": [
+        50,
+        325,
+        750,
+        380
+      ],
+      "label_ko": "주소",
+      "label_en": "Address",
+      "description_en": "Write your current residential address in Korea.",
+      "has_content": false,
+      "example_en": "Seoul Gangnam-gu"
+    },
+    {
+      "id": 7,
+      "bbox": [
+        50,
+        380,
+        750,
+        435
+      ],
+      "label_ko": "전화번호",
+      "label_en": "Phone Number",
+      "description_en": "Write your Korean phone number.",
+      "has_content": false,
+      "example_en": "010-1234-5678"
+    }
+  ]
+}
