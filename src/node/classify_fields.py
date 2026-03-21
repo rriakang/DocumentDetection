@@ -1,168 +1,298 @@
+from __future__ import annotations
+
+import logging
 import re
+from difflib import SequenceMatcher
+
 from src.state import FormGuideState
-from src.llm_client import call_ollama_with_image, call_ollama_text, parse_json_response, parse_json_list_response
-from src.prompts import build_row_ocr_prompt, build_row_classify_prompt, build_batch_classify_prompt
-from src.utils import enhance_crop_for_vlm
+from src.llm_client import (
+    call_ollama_text,
+    parse_json_list_response,
+)
+from src.ocr import extract_row_label_and_content
+from src.prompts import build_batch_classify_prompt
+
+logger = logging.getLogger(__name__)
 
 
-def _is_continuation_row(text: str) -> bool:
-    """라벨 없이 체크박스/옵션만 있는 연속 행인지 판별."""
-    text = text.strip()
-    if not text or text == "(empty)" or text == "(unreadable)":
-        return False
-    # □ 로 시작하는 행 = 이전 필드의 연속 옵션
-    if text.startswith("□"):
-        return True
-    # "대학교", "대 학 교" 등으로 시작 = 학교명 필드의 하위 행
-    if re.match(r"^(□\s*)?(대\s*학\s*교|고\s*등\s*학\s*교)", text):
-        return True
-    return False
+# ──────────────────────────────────────────────
+# OCR 기반 필드 분류 (규칙 제거, LLM이 전부 판단)
+# ──────────────────────────────────────────────
+# 기존 문제: 규칙 기반으로 연속행/서브행/스킵행을 판별하니 케이스마다 깨짐
+# 새 방식:
+#   1) OCR로 모든 행의 라벨+내용을 추출
+#   2) 전체 텍스트를 텍스트 LLM에 한번에 넘김
+#   3) LLM이 필드 분류, 병합, 스킵을 알아서 판단
+#   4) LLM 결과의 source_rows로 bbox 매칭
 
 
-def _is_table_subrow(text: str) -> bool:
-    """테이블 서브컬럼 행인지 판별 (이전 행의 세부 항목)."""
-    text = text.strip()
-    if not text:
-        return False
-    # "참여 프로그램  참여 기간  참여 회사(기관)명" 같은 서브헤더
-    sub_keywords = ["참여 프로그램", "참여 기간", "참여 기업", "참여 회사", "기관명", "기관)명"]
-    if any(kw in text for kw in sub_keywords):
-        return True
-    # '*'도 없고 '□'도 없는데 2~3개 단어로만 구성 (서브컬럼 헤더)
-    # 예: "프로그램명  기간  기관명"
-    parts = [p for p in re.split(r'\s{2,}', text) if p.strip()]
-    if len(parts) >= 2 and all(len(p) <= 10 for p in parts) and '*' not in text:
-        return True
-    return False
+def _ocr_all_rows(image, rows: list[dict]) -> list[dict]:
+    """모든 행을 OCR하여 라벨/내용/full_text를 추출."""
+    results = []
+    for row in rows:
+        try:
+            ocr = extract_row_label_and_content(
+                image=image, row_bbox=row["bbox"], full_image=image,
+            )
+            results.append({
+                "label": ocr.get("label", ""),
+                "content": ocr.get("content", ""),
+                "full_text": ocr.get("full_text", ""),
+                "bbox": row["bbox"],
+            })
+        except Exception:
+            results.append({
+                "label": "", "content": "", "full_text": "",
+                "bbox": row["bbox"],
+            })
+    return results
 
+
+def _build_ocr_batch_prompt(ocr_rows: list[dict], language: str) -> str:
+    """OCR 결과를 텍스트 LLM에 보내는 프롬프트.
+
+    규칙을 코드로 하드코딩하지 않고, LLM이 직접 판단하게 함.
+    """
+    from src.config import SUPPORTED_LANGUAGES
+    lang = SUPPORTED_LANGUAGES.get(language, "English")
+
+    rows_block = ""
+    for i, row in enumerate(ocr_rows):
+        label = row["label"] or "(no label)"
+        full = row["full_text"] or "(empty)"
+        rows_block += f"  Row {i+1} [label: \"{label}\"]: \"{full}\"\n"
+
+    return f"""You are a Korean government form expert.
+Below are ALL rows detected from a Korean form, with OCR text.
+
+{rows_block}
+Identify every INPUT FIELD the user must fill in.
+
+CRITICAL — MERGE these into ONE field:
+- Checkbox rows spanning multiple lines: ALL "□" options for the same label = ONE field.
+  Example: "희망지역 □서울 □인천" and "□울산 □부산" = ONE "희망지역" field
+- Education sub-rows: "고등학교 ..." and "대학교 ..." under "학교명" = ONE "학교명" field
+- Table fields: "일경험 참여이력" + "참여 프로그램 / 참여 기간 / 참여 회사" + any data rows = ONE "일경험 참여이력" field. Do NOT split sub-columns (참여 프로그램, 참여 기간, 참여 회사) into separate fields.
+- "자격/면허" rows near 일경험 = part of the same "일경험 참여이력" table
+- Consent text + checkbox (동의/부동의): = ONE "개인정보 제공 동의 여부" field
+- Any row with NO label that continues the previous field's options = merge it
+
+SPLIT into SEPARATE fields:
+- "성명  주민등록번호" on one row = TWO fields
+
+SKIP completely (NOT input fields):
+- Title/header (e.g., "인턴형 일경험 참여신청서", "접수번호")
+- Instructions (e.g., "(*)표시 필수입력", "*해당시")
+- Long paragraphs of consent/description text (these are NOT fields, they are explanations)
+- Footer (e.g., "...협회 귀중", "본인은 위 기재한...")
+- "구비서류" rows
+- Date/signature rows at the bottom ("2026년 월 일", "신청인", "(인 또는 서명)")
+
+Output JSON array:
+[
+  {{
+    "field_name_ko": "Korean label",
+    "field_name": "Translation in {lang}",
+    "description": "Short instruction in {lang} (under 15 words). Start with Write/Enter/Select.",
+    "example": "Realistic example",
+    "warning": "Note for foreigners, or empty",
+    "source_rows": [row numbers, 1-based]
+  }}
+]
+
+Output ONLY JSON array, nothing else."""
+
+
+def _merge_subfields(field_infos: list[dict]) -> list[dict]:
+    """LLM이 쪼개버린 하위 필드를 상위 필드에 병합.
+
+    예: '참여 프로그램', '참여 기간', '참여 회사' → '일경험 참여이력'에 흡수
+        'E-mail' → '연락처'에 흡수
+        '자격/면허' 가 일경험 근처에 있으면 → '일경험 참여이력'에 흡수
+    """
+    # 병합 규칙: (상위 필드 키워드, 하위 필드 키워드들)
+    merge_rules = [
+        ("일경험", ["참여 프로그램", "참여 기간", "참여 회사", "참여 기관", "자격", "면허"]),
+        ("연락처", ["E-mail", "e-mail", "이메일", "휴대폰", "휴대돈", "tel", "Tel", "TEL"]),
+    ]
+
+    # 1) 먼저 상위 필드가 하위 필드를 흡수하도록 마킹
+    absorbed = set()
+
+    for parent_kw, child_kws in merge_rules:
+        # 상위 필드 찾기
+        parent_idx = None
+        for i, field in enumerate(field_infos):
+            if parent_kw in field.get("field_name_ko", ""):
+                parent_idx = i
+                break
+
+        if parent_idx is None:
+            continue
+
+        parent = field_infos[parent_idx]
+        for j, other in enumerate(field_infos):
+            if j == parent_idx or j in absorbed:
+                continue
+            other_ko = other.get("field_name_ko", "")
+            if any(ckw in other_ko for ckw in child_kws):
+                sr = parent.get("source_rows", [])
+                osr = other.get("source_rows", [])
+                parent["source_rows"] = sorted(set(sr + osr))
+                absorbed.add(j)
+
+    # 2) 흡수되지 않은 필드만 남기기
+    merged = [f for i, f in enumerate(field_infos) if i not in absorbed]
+
+    # 하위 필드만 있고 상위 필드가 없는 경우 처리
+
+    # Case 1: 일경험 참여이력
+    sub_kws = ["참여 프로그램", "참여 기간", "참여 회사", "참여 기관"]
+    has_parent = any("일경험" in f.get("field_name_ko", "") for f in merged)
+    if not has_parent:
+        sub_fields = [f for f in merged if any(kw in f.get("field_name_ko", "") for kw in sub_kws)]
+        if sub_fields:
+            parent = sub_fields[0]
+            parent["field_name_ko"] = "일경험 참여이력"
+            parent["field_name"] = "Work Experience History"
+            parent["description"] = "Enter program name, period, and company for each experience."
+            for sf in sub_fields[1:]:
+                sr = parent.get("source_rows", [])
+                osr = sf.get("source_rows", [])
+                parent["source_rows"] = sorted(set(sr + osr))
+                merged.remove(sf)
+
+    # Case 2: 연락처 — "이름" + "tel" 이 있는데 "연락처"가 없으면 묶기
+    contact_kws = ["이름", "tel", "Tel", "TEL", "E-mail", "e-mail", "이메일", "휴대폰"]
+    has_contact = any("연락처" in f.get("field_name_ko", "") for f in merged)
+    if not has_contact:
+        contact_fields = [f for f in merged if any(kw in f.get("field_name_ko", "") for kw in contact_kws)]
+        if len(contact_fields) >= 2:
+            parent = contact_fields[0]
+            parent["field_name_ko"] = "연락처"
+            parent["field_name"] = "Contact Information"
+            parent["description"] = "Enter your name and phone number."
+            for sf in contact_fields[1:]:
+                sr = parent.get("source_rows", [])
+                osr = sf.get("source_rows", [])
+                parent["source_rows"] = sorted(set(sr + osr))
+                merged.remove(sf)
+
+    return merged
+
+
+def _match_source_rows_to_bbox(field_infos: list[dict],
+                                 ocr_rows: list[dict]) -> list[dict]:
+    """source_rows 정보를 사용하여 bbox를 할당."""
+    for field in field_infos:
+        source = field.pop("source_rows", [])
+        if not source:
+            field["bbox"] = [0, 0, 0, 0]
+            continue
+
+        # 1-based → 0-based
+        indices = [s - 1 for s in source if 0 < s <= len(ocr_rows)]
+        if not indices:
+            field["bbox"] = [0, 0, 0, 0]
+            continue
+
+        bboxes = [ocr_rows[i]["bbox"] for i in indices]
+        field["bbox"] = [
+            min(b[0] for b in bboxes),
+            min(b[1] for b in bboxes),
+            max(b[2] for b in bboxes),
+            max(b[3] for b in bboxes),
+        ]
+
+    return field_infos
+
+
+# ──────────────────────────────────────────────
+# 파일 입력용 (기존 텍스트 배치 방식)
+# ──────────────────────────────────────────────
 
 def _is_skip_text(text: str) -> bool:
-    """비필드 텍스트인지 판별 (조직명, 푸터, 안내문 등)."""
     if any(kw in text for kw in [
         "귀중", "귀하", "(사)", "(재)",
         "구비서류", "본인은 위 기재한",
-        "(*)표시", "필수입력",
+        "(*)표시 필수입력",
     ]):
         return True
-    # 의미없는 짧은 텍스트 (VLM 할루시네이션) 필터
     cleaned = re.sub(r'[^가-힣a-zA-Z]', '', text)
     if len(cleaned) < 2:
         return True
     return False
 
 
-def _merge_continuation_rows(
-    row_texts: list[str], rows: list[dict] | None = None,
-) -> tuple[list[str], list[list[int]]]:
-    """연속 행을 사전 병합."""
-    merged_texts = []
-    merged_indices = []
-
-    for i, text in enumerate(row_texts):
-        if i > 0 and _is_continuation_row(text) and merged_texts:
-            merged_texts[-1] += "\n" + text
-            merged_indices[-1].append(i)
-        else:
-            merged_texts.append(text)
-            merged_indices.append([i])
-
-    return merged_texts, merged_indices
-
-
-def _ocr_row(image, item, ocr_prompt, padding=4):
-    """단일 행을 VLM으로 OCR. 실패 시 크롭을 넓혀서 재시도."""
-    x1, y1, x2, y2 = item["bbox"]
-    crop = image.crop((
-        max(0, x1),
-        max(0, y1 - padding),
-        min(image.width, x2),
-        min(image.height, y2 + padding),
-    ))
-
-    try:
-        enhanced = enhance_crop_for_vlm(crop)
-        text = call_ollama_with_image(ocr_prompt, enhanced).strip()
-        if text:
-            return text
-    except Exception:
-        pass
-
-    # 빈 응답 → 크롭을 위아래로 넓혀서 재시도 (더 많은 문맥 제공)
-    extended_pad = max(padding, (y2 - y1) // 3)
-    crop2 = image.crop((
-        max(0, x1),
-        max(0, y1 - extended_pad),
-        min(image.width, x2),
-        min(image.height, y2 + extended_pad),
-    ))
-
-    try:
-        enhanced2 = enhance_crop_for_vlm(crop2)
-        text2 = call_ollama_with_image(ocr_prompt, enhanced2).strip()
-        if text2:
-            return text2
-    except Exception:
-        pass
-
-    return "(empty)"
-
-
-def _classify_rows(merged_texts, merged_indices, language, rows=None):
-    """병합된 행 텍스트를 분류하여 field_infos 생성. 이미지/파일 공용."""
-    field_infos = []
-    field_id = 0
-
-    for text, orig_indices in zip(merged_texts, merged_indices):
-        if not text.strip() or text in ("(empty)", "(unreadable)"):
+def _post_filter_fields(field_infos: list[dict]) -> list[dict]:
+    """LLM이 걸러주지 못한 행정/제목/스킵 필드를 후처리로 제거."""
+    skip_names = {
+        "접수번호", "접수일자", "접수 번호", "접수 일자",
+        "제목", "제  목", "제    목",
+        "과제개요", "과제개요 (필수입력)",
+        "결재", "산학협력단 결재",
+        "수신", "참조",
+    }
+    result = []
+    for f in field_infos:
+        ko = f.get("field_name_ko", "").strip()
+        # 공백 제거 후 비교
+        ko_nospace = ko.replace(" ", "")
+        if ko_nospace in {s.replace(" ", "") for s in skip_names}:
             continue
+        result.append(f)
+    return result
 
-        if _is_skip_text(text.strip()):
+
+def _classify_file_rows(row_texts: list[str], language: str) -> list[dict]:
+    filtered = []
+    for text in row_texts:
+        t = text.strip()
+        if not t or len(t) < 2:
             continue
+        if _is_skip_text(t):
+            continue
+        filtered.append(t)
 
+    CHUNK_SIZE = 25
+    all_field_infos = []
+
+    for start in range(0, len(filtered), CHUNK_SIZE):
+        chunk = filtered[start:start + CHUNK_SIZE]
+        batch_prompt = build_batch_classify_prompt(chunk, language)
         try:
-            classify_prompt = build_row_classify_prompt(text, language)
-            raw = call_ollama_text(classify_prompt)
-
-            # 한 행에 여러 필드가 있을 수 있으므로 배열도 시도
-            try:
-                parsed_list = parse_json_list_response(raw)
-            except Exception:
-                parsed_list = [parse_json_response(raw)]
-
-            for parsed in parsed_list:
-                ko_name = parsed.get("field_name_ko", "").strip()
-                name = parsed.get("field_name", "").strip()
-                if not ko_name and not name:
-                    continue
-
-                # bbox 계산 (이미지 입력인 경우만)
-                bbox = [0, 0, 0, 0]
-                if rows:
-                    min_idx = min(orig_indices)
-                    max_idx = max(orig_indices)
-                    if min_idx < len(rows) and max_idx < len(rows):
-                        bbox = [
-                            rows[min_idx]["bbox"][0],
-                            rows[min_idx]["bbox"][1],
-                            rows[max_idx]["bbox"][2],
-                            rows[max_idx]["bbox"][3],
-                        ]
-
-                field_id += 1
-                field_infos.append({
-                    "id": field_id,
-                    "bbox": bbox,
-                    "field_name_ko": ko_name,
-                    "field_name": name or ko_name,
-                    "description": parsed.get("description", ""),
-                    "example": parsed.get("example", ""),
-                    "warning": parsed.get("warning", ""),
-                })
+            raw = call_ollama_text(batch_prompt, max_tokens=4096)
+            parsed_list = parse_json_list_response(raw)
         except Exception:
             continue
 
-    return field_infos
+        for parsed in parsed_list:
+            ko_name = parsed.get("field_name_ko", "").strip()
+            name = parsed.get("field_name", "").strip()
+            if not ko_name and not name:
+                continue
+            all_field_infos.append({
+                "id": 0, "bbox": [0, 0, 0, 0],
+                "field_name_ko": ko_name,
+                "field_name": name or ko_name,
+                "description": parsed.get("description", ""),
+                "example": parsed.get("example", ""),
+                "warning": parsed.get("warning", ""),
+            })
 
+    # 하위 필드 병합 (이름/tel → 연락처 등)
+    all_field_infos = _merge_subfields(all_field_infos)
+    # 행정/제목 필드 후처리 제거
+    all_field_infos = _post_filter_fields(all_field_infos)
+
+    for i, f in enumerate(all_field_infos):
+        f["id"] = i + 1
+    return all_field_infos
+
+
+# ──────────────────────────────────────────────
+# 메인 노드
+# ──────────────────────────────────────────────
 
 def classify_fields_node(state: FormGuideState) -> FormGuideState:
     if state.get("error"):
@@ -170,66 +300,16 @@ def classify_fields_node(state: FormGuideState) -> FormGuideState:
 
     language = state.get("language", "en")
 
-    # ── 파일 입력: row_texts가 이미 추출되어 있음 ──
+    # ── 파일 입력 ──
     if state.get("input_type") == "file" and state.get("row_texts"):
         row_texts = state["row_texts"]
-
         if not row_texts:
             state["error"] = "파일에서 텍스트를 추출하지 못했습니다."
             return state
-
-        # 1) 사전 필터: 비필드 행 제거 (파일은 설명문이 많으므로 공격적 필터)
-        filtered = []
-        for text in row_texts:
-            t = text.strip()
-            if not t or len(t) < 2:
-                continue
-            if _is_skip_text(t):
-                continue
-            # 파일용 추가 필터: 긴 설명문/안내문 제거 (30자 이상이면서 *나 □가 없으면 안내문)
-            if len(t) > 40 and '*' not in t and '□' not in t and '［' not in t:
-                continue
-            filtered.append(t)
-
-        merged_texts, _ = _merge_continuation_rows(filtered)
-
-        # 2) 청크 단위 배치 (최대 25행씩 — LLM이 안정적으로 처리)
-        CHUNK_SIZE = 25
-        all_field_infos = []
-
-        for start in range(0, len(merged_texts), CHUNK_SIZE):
-            chunk = merged_texts[start:start + CHUNK_SIZE]
-            batch_prompt = build_batch_classify_prompt(chunk, language)
-            try:
-                raw = call_ollama_text(batch_prompt, max_tokens=4096)
-                parsed_list = parse_json_list_response(raw)
-            except Exception:
-                # 배치 실패 시 이 청크는 스킵
-                continue
-
-            for parsed in parsed_list:
-                ko_name = parsed.get("field_name_ko", "").strip()
-                name = parsed.get("field_name", "").strip()
-                if not ko_name and not name:
-                    continue
-                all_field_infos.append({
-                    "id": 0,
-                    "bbox": [0, 0, 0, 0],
-                    "field_name_ko": ko_name,
-                    "field_name": name or ko_name,
-                    "description": parsed.get("description", ""),
-                    "example": parsed.get("example", ""),
-                    "warning": parsed.get("warning", ""),
-                })
-
-        # id 재정렬
-        for i, f in enumerate(all_field_infos):
-            f["id"] = i + 1
-
-        state["field_infos"] = all_field_infos
+        state["field_infos"] = _classify_file_rows(row_texts, language)
         return state
 
-    # ── 이미지 입력: 기존 VLM OCR 파이프라인 ──
+    # ── 이미지 입력: OCR + 텍스트 LLM 방식 ──
     image = state["preprocessed_image"]
     rows = state.get("detected_boxes", [])
 
@@ -237,15 +317,51 @@ def classify_fields_node(state: FormGuideState) -> FormGuideState:
         state["error"] = "입력 칸을 감지하지 못했습니다. 다른 이미지를 시도해주세요."
         return state
 
-    # 1단계: VLM으로 각 행의 텍스트 추출
-    ocr_prompt = build_row_ocr_prompt()
-    row_texts = [_ocr_row(image, item, ocr_prompt) for item in rows]
+    # 1단계: OCR로 모든 행의 텍스트 추출
+    logger.info(f"OCR scanning {len(rows)} detected rows...")
+    ocr_rows = _ocr_all_rows(image, rows)
+    logger.info(f"OCR labels: {[r['label'] for r in ocr_rows]}")
 
-    # 2단계: 연속 행 사전 병합
-    merged_texts, merged_indices = _merge_continuation_rows(row_texts)
+    # 2단계: 텍스트 LLM에 전체 OCR 결과를 넘겨서 필드 분류
+    prompt = _build_ocr_batch_prompt(ocr_rows, language)
+    try:
+        raw = call_ollama_text(prompt, max_tokens=4096)
+        logger.info(f"LLM classify response length: {len(raw)}")
+        parsed_list = parse_json_list_response(raw)
+    except Exception as e:
+        logger.error(f"LLM field classification failed: {e}")
+        state["error"] = "필드 분류에 실패했습니다. 다시 시도해주세요."
+        return state
 
-    # 3단계: 분류
-    state["field_infos"] = _classify_rows(
-        merged_texts, merged_indices, language, rows,
-    )
+    # 3단계: 파싱 → field_infos
+    field_infos = []
+    for parsed in parsed_list:
+        ko_name = parsed.get("field_name_ko", "").strip()
+        name = parsed.get("field_name", "").strip()
+        if not ko_name and not name:
+            continue
+        field_infos.append({
+            "id": 0,
+            "bbox": [0, 0, 0, 0],
+            "field_name_ko": ko_name,
+            "field_name": name or ko_name,
+            "description": parsed.get("description", ""),
+            "example": parsed.get("example", ""),
+            "warning": parsed.get("warning", ""),
+            "source_rows": parsed.get("source_rows", []),
+        })
+
+    # 4단계: 하위 필드 병합 (LLM이 쪼갠 것 후처리)
+    field_infos = _merge_subfields(field_infos)
+
+    # 5단계: source_rows → bbox 매칭
+    field_infos = _match_source_rows_to_bbox(field_infos, ocr_rows)
+
+    for i, f in enumerate(field_infos):
+        f["id"] = i + 1
+
+    logger.info(f"Final {len(field_infos)} fields: "
+                f"{[f['field_name_ko'] for f in field_infos]}")
+
+    state["field_infos"] = field_infos
     return state

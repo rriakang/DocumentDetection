@@ -19,7 +19,8 @@ def _image_to_base64(image: Image.Image) -> str:
     return base64.b64encode(buffer.getvalue()).decode("utf-8")
 
 
-def call_ollama_with_image(prompt: str, image: Image.Image) -> str:
+def call_ollama_with_image(prompt: str, image: Image.Image,
+                           max_tokens: int = 512) -> str:
     image_b64 = _image_to_base64(image)
 
     payload = {
@@ -30,8 +31,8 @@ def call_ollama_with_image(prompt: str, image: Image.Image) -> str:
         "keep_alive": "10m",
         "options": {
             "temperature": 0.2,
-            "num_predict": 512,
-            "num_ctx": 4096,
+            "num_predict": max_tokens,
+            "num_ctx": 8192,
         },
     }
 

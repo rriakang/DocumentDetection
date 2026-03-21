@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from src.config import SUPPORTED_LANGUAGES
 
 
@@ -105,28 +107,50 @@ def build_batch_classify_prompt(row_texts: list[str], language_code: str) -> str
 Below are ALL rows extracted from a Korean form, in order from top to bottom:
 
 {rows_block}
-Analyze these rows and identify every INPUT FIELD where the user needs to write or select something.
+Identify every INPUT FIELD the user must fill in.
 
-IMPORTANT RULES:
-1. SKIP non-input rows: titles, headers, instructions (e.g., "(*)표시 필수입력"), footer text, organization names, empty rows.
-2. MERGE multi-row fields: If a row has NO field label and only contains options/checkboxes (e.g., "□ 울산·대구·경북 □ 부산·경남"), it is a CONTINUATION of the previous field — merge it. Similarly if "고등학교" and "대학교" rows are both under "학교명*", combine into ONE "학교명" field. Include ALL options from ALL rows in the description.
-   NEVER skip a field that has a label with * (required marker).
-3. SPLIT multi-field rows: If one row contains multiple separate input fields (e.g., "성명*" and "주민등록번호*" on the same row), output them as SEPARATE fields.
-4. For checkbox fields: list ALL available options from ALL related rows with translations.
-5. For date fields (년/월/일) and signature fields (신청인, 서명): include them as fields.
-6. For table-style fields (일경험 참여이력 with sub-columns): describe what sub-columns need to be filled.
+SKIP completely (NOT input fields):
+- Title/header rows (e.g., "업무처리요청서", "인턴형 일경험 참여신청서")
+- Administrative fields filled by staff (e.g., "접수번호", "접수일자", "결재")
+- Section headers with no input (e.g., "과제개요 (필수입력)" alone is a header, not a field)
+- Instructions (e.g., "(*)표시 필수입력", "*해당시")
+- Long consent/description paragraphs
+- Footer text (e.g., "...협회 귀중", "본인은 위 기재한...")
+- "구비서류" rows
+- Organization names (e.g., "산학협력단장")
+- "수신 :" and "참조 :" rows (these are pre-filled or admin fields)
+- "담 당 / 팀 장 / 단 장" approval rows
 
-Output a JSON array of fields. Each field:
-{{
-  "field_name_ko": "Exact Korean label",
-  "field_name": "Accurate translation in {lang}",
-  "description": "Clear, specific instructions for a foreigner, in {lang}",
-  "example": "A realistic example value in {lang}",
-  "warning": "Important notes or common mistakes for foreigners, or empty string",
-  "source_rows": [list of row numbers this field spans]
-}}
+MERGE into ONE field:
+- "이름" + "tel" under "연 락 처" = ONE "연락처" field
+- Checkbox rows spanning multiple lines = ONE field
+- Table sub-columns (참여 프로그램, 참여 기간, 참여 회사) = ONE parent field
+- "E-mail", "휴대폰" under "연 락 처" = ONE "연락처" field
 
-Output ONLY the JSON array, no other text."""
+SPLIT into SEPARATE fields:
+- "성명  주민등록번호" on one row = TWO fields
+- Template text with multiple blanks (e.g., "발명의 명칭 :  발명자 (학과) :") = SEPARATE fields for each blank
+
+INCLUDE these as fields:
+- Any row with a label where the user writes something (지원 기관, 사업명, 연구과제명, etc.)
+- Date fields (제출일자, 년/월/일)
+- Signature fields (책임교수, 신청인)
+- Template fields where user fills in blanks (발명의 명칭, 발명자)
+- Attachment fields (붙임자료)
+
+Output JSON array:
+[
+  {{
+    "field_name_ko": "Korean label (clean, no spaces padding)",
+    "field_name": "Translation in {lang}",
+    "description": "Short instruction in {lang} (under 15 words). Start with Write/Enter/Select.",
+    "example": "Realistic example",
+    "warning": "Note for foreigners, or empty",
+    "source_rows": [row numbers, 1-based]
+  }}
+]
+
+Output ONLY JSON array, nothing else."""
 
 
 def build_ocr_field_prompt(ocr_text: str, label: str, language_code: str) -> str:

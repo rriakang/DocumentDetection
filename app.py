@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import os
 import re
@@ -18,7 +20,7 @@ from src.file_filler import fill_document
 graph = build_graph()
 
 # 지원하는 파일 확장자
-SUPPORTED_FILE_EXTS = {".pdf", ".docx", ".hwp", ".hwpx"}
+SUPPORTED_FILE_EXTS = {".pdf", ".docx", ".hwp", ".hwpx", ".hwtx"}
 
 # -- UI 텍스트 ----------------------------------------------------------
 
@@ -404,33 +406,13 @@ def _classify_one_row(text: str, language: str) -> dict | None:
 
 
 def _prepare_file_rows(file_path: str) -> list[str]:
-    """파일에서 텍스트 추출 + 필터 + 병합하여 분류 대상 행 목록 반환."""
+    """파일에서 텍스트 추출하여 원본 행과 분류용 행을 반환."""
     from src.file_extractor import extract_rows_from_file
-    from src.node.classify_fields import _is_skip_text, _is_continuation_row, _is_table_subrow
 
     row_texts = extract_rows_from_file(file_path)
 
-    # 필터링
-    filtered = []
-    for text in row_texts:
-        t = text.strip()
-        if not t or len(t) < 2:
-            continue
-        if _is_skip_text(t):
-            continue
-        if len(t) > 40 and '*' not in t and '□' not in t and '［' not in t:
-            continue
-        filtered.append(t)
-
-    # 연속행 + 테이블 서브행 병합
-    merged = []
-    for t in filtered:
-        if merged and (_is_continuation_row(t) or _is_table_subrow(t)):
-            merged[-1] += "\n" + t
-        else:
-            merged.append(t)
-
-    return row_texts, merged
+    # 필터링은 _classify_file_rows에서 처리하므로 원본 그대로 반환
+    return row_texts, row_texts
 
 
 def _checkbox_updates_for_field(field: dict):
@@ -473,7 +455,7 @@ def start_analysis(image, file, language, session_state):
         chat = [{"role": "assistant", "content": lbl["upload_first"]}]
         return _err(chat)
 
-    # ── 파일 입력: 스트리밍 방식 (추출→개요→첫 필드만 분류) ──
+    # ── 파일 입력: 배치 방식 (추출→문서분리→개요→전체 필드 분류) ──
     if has_file:
         file_path = file if isinstance(file, str) else str(file)
         ext = os.path.splitext(file_path)[1].lower()
@@ -484,52 +466,54 @@ def start_analysis(image, file, language, session_state):
                      f"지원 형식: PDF, DOCX, HWP, HWPX"}]
             return _err(chat)
 
-        # 1) 텍스트 추출 + 필터 (즉시)
+        # 1) 텍스트 추출
         try:
-            raw_texts, pending_rows = _prepare_file_rows(file_path)
+            raw_texts, _ = _prepare_file_rows(file_path)
         except Exception as e:
             chat = [{"role": "assistant", "content": f"❌ 파일 처리 실패: {e}"}]
             return _err(chat)
 
-        if not pending_rows:
+        if not raw_texts:
             chat = [{"role": "assistant", "content": lbl["no_fields"]}]
             return _err(chat)
 
-        # 2) 문서 개요 생성 (LLM 1회 ~30초)
-        overview = _build_file_overview(raw_texts, language)
-        chat = [{"role": "assistant", "content": f"📄 {overview}"}]
+        # 2) 합본 파일 문서 분리
+        from src.file_extractor import split_documents
+        documents = split_documents(raw_texts)
 
-        # 3) 첫 번째 필드만 분류 (LLM 1회 ~5초)
-        first_field = None
-        row_idx = 0
-        while row_idx < len(pending_rows) and first_field is None:
-            result = _classify_one_row(pending_rows[row_idx], language)
-            row_idx += 1
-            if result:
-                first_field = result[0]
-                first_field["id"] = 1
-                # 한 행에서 여러 필드가 나오면 나머지는 field_infos에 추가
-                extra_fields = result[1:] if len(result) > 1 else []
+        # 여러 문서가 있으면 각각 분류 후 섹션별로 안내
+        if len(documents) > 1:
+            doc_titles = [d["title"] for d in documents]
+            chat = [{"role": "assistant", "content":
+                     f"📑 이 파일에 **{len(documents)}개 문서**가 포함되어 있습니다:\n" +
+                     "\n".join(f"  {i+1}. {t}" for i, t in enumerate(doc_titles)) +
+                     "\n\n모든 문서의 입력 필드를 순서대로 안내해드릴게요!"}]
+            target_rows = raw_texts  # 전체를 LLM에 넘김
+        else:
+            target_rows = raw_texts
+            chat = []
 
-        if not first_field:
+        # 3) 문서 개요 생성 (LLM 1회)
+        overview = _build_file_overview(target_rows, language)
+        chat.append({"role": "assistant", "content": f"📄 {overview}"})
+
+        # 4) 전체 필드 배치 분류 (LLM 1회)
+        from src.node.classify_fields import _classify_file_rows
+        all_fields = _classify_file_rows(target_rows, language)
+
+        if not all_fields:
             chat.append({"role": "assistant", "content": lbl["no_fields"]})
             return _err(chat)
 
         # 첫 필드 안내
-        guidance = format_field_guidance(first_field, language)
+        guidance = format_field_guidance(all_fields[0], language)
+        intro = lbl["found_fields"].format(n=len(all_fields))
         chat.append({"role": "assistant", "content":
-                     f"📝 하나씩 안내해드릴게요!\n\n{guidance}"})
-
-        # 세션: 남은 행 저장 (on-demand 분류)
-        all_fields = [first_field]
-        if 'extra_fields' in dir() and extra_fields:
-            for i, f in enumerate(extra_fields):
-                f["id"] = i + 2
-                all_fields.append(f)
+                     f"{intro}\n\n{guidance}"})
 
         new_state = {
             "field_infos": all_fields,
-            "pending_rows": pending_rows[row_idx:],
+            "pending_rows": [],
             "current_field": 0,
             "user_inputs": {},
             "language": language,
@@ -542,7 +526,7 @@ def start_analysis(image, file, language, session_state):
         card_img = _render_field_cards(all_fields, current_field=0)
 
         # 첫 필드가 체크박스면 체크박스 UI 표시, 텍스트 입력 숨김
-        cb_grp, cb_btn, is_cb = _checkbox_updates_for_field(first_field)
+        cb_grp, cb_btn, is_cb = _checkbox_updates_for_field(all_fields[0])
         txt_update = gr.update(interactive=True, visible=not is_cb)
         return chat, card_img, gr.update(visible=False), new_state, txt_update, gr.update(value=None, visible=False), cb_grp, cb_btn
 
@@ -903,6 +887,8 @@ WELCOME_MSG = (
 
 with gr.Blocks(
     title="서류 작성 도우미 / Form Filing Assistant",
+    theme=gr.themes.Soft(),
+    css=CUSTOM_CSS,
 ) as demo:
     session_state = gr.State({})
 
@@ -971,6 +957,7 @@ with gr.Blocks(
         with gr.Column(scale=3, min_width=400):
             chatbot = gr.Chatbot(
                 value=[{"role": "assistant", "content": WELCOME_MSG}],
+                type="messages",
                 label="💬 AI 상담",
                 height=480,
                 layout="bubble",
@@ -1041,7 +1028,8 @@ with gr.Blocks(
 
 if __name__ == "__main__":
     demo.launch(
-        theme=gr.themes.Soft(),
+        server_name="0.0.0.0",
+        server_port=7860,
         show_error=True,
-        css=CUSTOM_CSS,
+        show_api=False,
     )
