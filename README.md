@@ -2,16 +2,22 @@
 
 An AI-powered document analysis system that helps foreigners easily fill out Korean government forms.
 
-Upload a form image or file (PDF, DOCX, HWP), and the system automatically detects input fields and provides step-by-step guidance in your preferred language.
+Upload a form image or file (PDF, DOCX, HWP, HWPX), and the system automatically detects input fields and provides step-by-step guidance in your preferred language.
 
-![Python](https://img.shields.io/badge/Python-3.11+-blue)
-![Gradio](https://img.shields.io/badge/Gradio-5.0+-orange)
+![Python](https://img.shields.io/badge/Python-3.9+-blue)
+![Gradio](https://img.shields.io/badge/Gradio-4.44-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
+
+## UI
+
+![UI Screenshot](eval/images/ui_screenshot.png)
 
 ## Features
 
-- **Automatic Field Detection** — OpenCV-based table row detection with continuation row merging
+- **Automatic Field Detection** — OpenCV-based table row detection + OCR + LLM batch classification
 - **Hybrid OCR** — EasyOCR (crop-based) + PaddleOCR (full-image fallback) for robust Korean text extraction
+- **HWP/HWPX Support** — PrvText cell-structure parsing for HWP, ZIP-based XML extraction for HWPX
+- **Multi-document Splitting** — Automatically detects and separates combined forms (신청서+확인서+동의서)
 - **Multilingual Guidance** — LLM generates clear instructions for each field from a foreigner's perspective
 - **Interactive Input** — Chatbot-style interface guides users through each field one by one
 - **Checkbox Support** — Automatic detection of selectable fields with dedicated UI
@@ -230,7 +236,7 @@ python -m eval.run_eval --mode e2e --gt eval/ground_truth/complex_form.json --la
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.9+
 - [Ollama](https://ollama.ai/) (Local LLM server)
 
 ### 1. Clone and Setup
@@ -270,7 +276,7 @@ Open `http://localhost:7860` in your browser.
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama server URL |
 | `OLLAMA_VLM_MODEL` | `qwen3-vl:8b` | Vision model |
 | `OLLAMA_TEXT_MODEL` | `qwen3:8b` | Text model |
-| `OLLAMA_TIMEOUT` | `180` | Request timeout (seconds) |
+| `OLLAMA_TIMEOUT` | `300` | Request timeout (seconds) |
 
 ---
 
@@ -318,9 +324,9 @@ DocumentDetection/
 
 ## Tech Stack
 
-- **UI**: Gradio 5.0
+- **UI**: Gradio 4.44
 - **Pipeline**: LangGraph
 - **Row Detection**: OpenCV (Adaptive Threshold + Morphology)
 - **OCR**: EasyOCR (crop-based) + PaddleOCR (full-image fallback)
 - **LLM**: Ollama (qwen3-vl:8b, qwen3:8b)
-- **File Processing**: pdfplumber, python-docx
+- **File Processing**: pdfplumber, python-docx, olefile (HWP)
