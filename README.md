@@ -28,6 +28,14 @@ Upload a form image or file (PDF, DOCX, HWP, HWPX), and the system automatically
 
 ## System Architecture
 
+> **Figure 0.** Research method at a glance — 6-panel sketchnote covering input, detection, hybrid OCR, the VLM crop-expansion retry, the two-stage VLM/Text-LLM role split, and measured results.
+
+![Research method overview](docs/research_method.png)
+
+Vector source: [`docs/research_method.svg`](docs/research_method.svg) · Companion Mermaid diagrams: [`docs/architecture.md`](docs/architecture.md)
+
+---
+
 > **Figure 1.** Overall system pipeline. The form image goes through four processing stages before reaching the user via an interactive chatbot interface.
 
 ```mermaid
