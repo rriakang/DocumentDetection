@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1700 1020"
-     font-family="'Bradley Hand', 'Marker Felt', 'Noteworthy', 'Comic Sans MS', cursive">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1700 900"
+     font-family="'Bradley Hand', 'Marker Felt', 'Noteworthy', 'Apple SD Gothic Neo', 'Nanum Pen Script', cursive">
   <defs>
     <style>
       .bg       { fill: #fbf7ec; }
@@ -7,13 +7,12 @@
       .panel-c  { fill: #ecfae8; stroke: #2e7d32; stroke-width: 3; }
       .panel-d  { fill: #f4e8ff; stroke: #6d28d9; stroke-width: 3.5; }
       .panel-e  { fill: #ffe8ef; stroke: #be123c; stroke-width: 3.5; }
-      .panel-f  { fill: #fff9d6; stroke: #a16207; stroke-width: 3; }
 
-      .title    { font-size: 48px; font-weight: 700; fill: #111; }
-      .h        { font-size: 30px; font-weight: 700; fill: #111; }
-      .star     { font-size: 30px; font-weight: 700; }
-      .t        { font-size: 22px; fill: #222; font-weight: 700; }
-      .m        { font-size: 20px; fill: #222; }
+      .title    { font-size: 52px; font-weight: 700; fill: #111; }
+      .h        { font-size: 32px; font-weight: 700; fill: #111; }
+      .star     { font-size: 32px; font-weight: 700; }
+      .t        { font-size: 24px; fill: #222; font-weight: 700; }
+      .m        { font-size: 22px; fill: #222; }
       .mono     { font-family: 'Menlo', 'Consolas', monospace; font-size: 20px; font-weight: 700; fill: #c56b10; }
 
       .arrow    { stroke: #333; stroke-width: 3; fill: none; }
@@ -33,20 +32,23 @@
     </filter>
   </defs>
 
-  <rect class="bg" width="1700" height="1020"/>
-  <rect width="1700" height="1020" fill="url(#grid)" opacity="0.4"/>
+  <rect class="bg" width="1700" height="900"/>
+  <rect width="1700" height="900" fill="url(#grid)" opacity="0.4"/>
 
   <!-- ====================== TITLE ====================== -->
-  <text x="850" y="70" text-anchor="middle" class="title">
-    How do we read a Korean form?
+  <text x="850" y="72" text-anchor="middle" class="title">
+    어떻게 한국어 공공문서를 읽을까?
   </text>
 
-  <!-- ====================== PANEL 1 : Row Detection ====================== -->
-  <g transform="translate(30,105)" filter="url(#shadow)">
-    <rect class="panel-b" width="800" height="360" rx="16"/>
-    <text x="28" y="48" class="h">1. Row Detection</text>
+  <!-- decorative stars -->
+  <text x="180" y="70" font-size="40" fill="#ca8a04">✦</text>
+  <text x="1500" y="70" font-size="40" fill="#ca8a04">✦</text>
 
-    <!-- mini form sketch -->
+  <!-- ====================== PANEL 1 : 행 검출 ====================== -->
+  <g transform="translate(30,110)" filter="url(#shadow)">
+    <rect class="panel-b" width="800" height="360" rx="16"/>
+    <text x="28" y="48" class="h">1. 행 검출 (OpenCV)</text>
+
     <g transform="translate(40,80)">
       <rect x="0" y="0" width="300" height="240" fill="#fff" stroke="#333" stroke-width="2.5"/>
       <line x1="0"   y1="48"  x2="300" y2="48"  stroke="#333" stroke-width="2"/>
@@ -70,20 +72,19 @@
     <path class="arrow" d="M 360 200 L 430 200" marker-end="url(#arrow)"/>
 
     <g transform="translate(450,120)">
-      <text x="0" y="0"   class="t">• threshold</text>
-      <text x="0" y="40"  class="t">• horizontal kernel</text>
-      <text x="0" y="80"  class="t">• vertical kernel</text>
-      <text x="0" y="120" class="t">• merge rows</text>
+      <text x="0" y="0"   class="t">• 이진화</text>
+      <text x="0" y="40"  class="t">• 가로 커널</text>
+      <text x="0" y="80"  class="t">• 세로 커널</text>
+      <text x="0" y="120" class="t">• 연속 행 병합</text>
       <text x="0" y="180" class="mono">→  row_crops [ ]</text>
     </g>
   </g>
 
-  <!-- ====================== PANEL 2 : Hybrid OCR ====================== -->
-  <g transform="translate(870,105)" filter="url(#shadow)">
+  <!-- ====================== PANEL 2 : 하이브리드 OCR ====================== -->
+  <g transform="translate(870,110)" filter="url(#shadow)">
     <rect class="panel-c" width="800" height="360" rx="16"/>
-    <text x="28" y="48" class="h">2. Hybrid OCR</text>
+    <text x="28" y="48" class="h">2. 하이브리드 OCR</text>
 
-    <!-- EasyOCR -->
     <g transform="translate(40,90)">
       <rect width="240" height="80" rx="10" fill="#fff" stroke="#2e7d32" stroke-width="3"/>
       <text x="120" y="50" text-anchor="middle" class="t">EasyOCR</text>
@@ -91,119 +92,103 @@
 
     <path class="arrow" d="M 280 130 L 335 130" marker-end="url(#arrow)"/>
 
-    <!-- diamond -->
     <g transform="translate(340,90)">
       <polygon points="130,0 260,40 130,80 0,40" fill="#fff8d6" stroke="#ca8a04" stroke-width="3"/>
-      <text x="130" y="48" text-anchor="middle" class="t">label ≤ 1 char ?</text>
+      <text x="130" y="50" text-anchor="middle" class="t">라벨 ≤ 1자?</text>
     </g>
 
-    <!-- no → keep -->
     <path class="arrow" d="M 600 130 L 650 130 L 650 285 L 425 285" marker-end="url(#arrow)"/>
-    <text x="660" y="155" class="t" fill="#2e7d32">no</text>
+    <text x="660" y="155" class="t" fill="#2e7d32">아니오</text>
 
-    <!-- yes ↓ -->
     <path class="arrow" d="M 470 170 L 470 215" marker-end="url(#arrow)"/>
-    <text x="485" y="200" class="t" fill="#c53030">yes</text>
+    <text x="485" y="202" class="t" fill="#c53030">예</text>
 
-    <!-- PaddleOCR -->
     <g transform="translate(340,215)">
       <rect width="260" height="60" rx="10" fill="#fff" stroke="#c53030" stroke-width="3"/>
-      <text x="130" y="40" text-anchor="middle" class="t">PaddleOCR</text>
+      <text x="130" y="42" text-anchor="middle" class="t">PaddleOCR</text>
     </g>
 
-    <!-- merged output -->
     <g transform="translate(155,275)">
       <rect width="270" height="55" rx="27" fill="#fff" stroke="#2e7d32" stroke-width="3"/>
-      <text x="135" y="37" text-anchor="middle" class="mono" fill="#2e7d32">label · content · text</text>
+      <text x="135" y="37" text-anchor="middle" class="mono" fill="#2e7d32">라벨 · 내용 · 원문</text>
     </g>
   </g>
 
-  <!-- ====================== PANEL 3 : VLM Crop-Expansion ====================== -->
-  <g transform="translate(30,490)" filter="url(#shadow)">
-    <rect class="panel-d" width="800" height="400" rx="18"/>
-    <text x="28" y="52" class="star" fill="#6d28d9">★ 3. VLM Crop-Expansion Retry</text>
+  <!-- ====================== PANEL 3 : VLM 크롭 확장 ====================== -->
+  <g transform="translate(30,500)" filter="url(#shadow)">
+    <rect class="panel-d" width="800" height="380" rx="18"/>
+    <text x="28" y="52" class="star" fill="#6d28d9">★ 3. VLM 크롭 확장 재시도</text>
 
-    <!-- concentric crops -->
-    <g transform="translate(60,135)">
+    <g transform="translate(60,140)">
       <rect x="0"  y="0"  width="340" height="200" fill="#fff" stroke="#6d28d9"
             stroke-width="3" stroke-dasharray="10 5"/>
-      <text x="170" y="-12" text-anchor="middle" class="t" fill="#6d28d9">attempt 3</text>
+      <text x="170" y="-12" text-anchor="middle" class="t" fill="#6d28d9">3차 시도</text>
 
       <rect x="40" y="28" width="260" height="140" fill="#fff" stroke="#9333ea"
             stroke-width="3" stroke-dasharray="8 4"/>
-      <text x="170" y="22" text-anchor="middle" class="t" fill="#9333ea">attempt 2</text>
+      <text x="170" y="22" text-anchor="middle" class="t" fill="#9333ea">2차 시도</text>
 
       <rect x="80" y="62" width="180" height="60" fill="#f4e8ff" stroke="#4c1d95" stroke-width="3.5"/>
-      <text x="170" y="100" text-anchor="middle" class="t" fill="#4c1d95">attempt 1</text>
+      <text x="170" y="100" text-anchor="middle" class="t" fill="#4c1d95">1차 시도</text>
     </g>
 
-    <!-- schedule table -->
-    <g transform="translate(450,130)">
-      <text x="0" y="0" class="t" fill="#6d28d9">schedule</text>
+    <g transform="translate(450,140)">
+      <text x="0" y="0" class="t" fill="#6d28d9">확장 스케줄</text>
 
-      <!-- header -->
       <rect x="0"   y="16" width="110" height="44" fill="#6d28d9"/>
       <rect x="110" y="16" width="115" height="44" fill="#6d28d9"/>
       <rect x="225" y="16" width="115" height="44" fill="#6d28d9"/>
-      <text x="55"  y="46" text-anchor="middle" class="t" fill="#fff">try</text>
-      <text x="167" y="46" text-anchor="middle" class="t" fill="#fff">V</text>
-      <text x="282" y="46" text-anchor="middle" class="t" fill="#fff">H</text>
+      <text x="55"  y="46" text-anchor="middle" class="t" fill="#fff">시도</text>
+      <text x="167" y="46" text-anchor="middle" class="t" fill="#fff">수직</text>
+      <text x="282" y="46" text-anchor="middle" class="t" fill="#fff">수평</text>
 
-      <!-- row 1 -->
       <rect x="0"   y="60" width="340" height="44" fill="#fff" stroke="#6d28d9" stroke-width="2"/>
-      <text x="55"  y="90" text-anchor="middle" class="mono" fill="#4c1d95">1</text>
-      <text x="167" y="90" text-anchor="middle" class="mono" fill="#4c1d95">0%</text>
-      <text x="282" y="90" text-anchor="middle" class="mono" fill="#4c1d95">0%</text>
+      <text x="55"  y="92" text-anchor="middle" class="mono" fill="#4c1d95">1</text>
+      <text x="167" y="92" text-anchor="middle" class="mono" fill="#4c1d95">0%</text>
+      <text x="282" y="92" text-anchor="middle" class="mono" fill="#4c1d95">0%</text>
 
-      <!-- row 2 -->
       <rect x="0"   y="104" width="340" height="44" fill="#faf5ff" stroke="#6d28d9" stroke-width="2"/>
-      <text x="55"  y="134" text-anchor="middle" class="mono" fill="#9333ea">2</text>
-      <text x="167" y="134" text-anchor="middle" class="mono" fill="#9333ea">+10%</text>
-      <text x="282" y="134" text-anchor="middle" class="mono" fill="#9333ea">+5%</text>
+      <text x="55"  y="136" text-anchor="middle" class="mono" fill="#9333ea">2</text>
+      <text x="167" y="136" text-anchor="middle" class="mono" fill="#9333ea">+10%</text>
+      <text x="282" y="136" text-anchor="middle" class="mono" fill="#9333ea">+5%</text>
 
-      <!-- row 3 -->
       <rect x="0"   y="148" width="340" height="44" fill="#fff" stroke="#6d28d9" stroke-width="2"/>
-      <text x="55"  y="178" text-anchor="middle" class="mono" fill="#6d28d9">3</text>
-      <text x="167" y="178" text-anchor="middle" class="mono" fill="#6d28d9">+25%</text>
-      <text x="282" y="178" text-anchor="middle" class="mono" fill="#6d28d9">+15%</text>
+      <text x="55"  y="180" text-anchor="middle" class="mono" fill="#6d28d9">3</text>
+      <text x="167" y="180" text-anchor="middle" class="mono" fill="#6d28d9">+25%</text>
+      <text x="282" y="180" text-anchor="middle" class="mono" fill="#6d28d9">+15%</text>
     </g>
 
-    <!-- empty → retry caption -->
-    <g transform="translate(60,360)">
-      <text x="0" y="0" class="t" fill="#c53030">VLM says ""</text>
-      <path class="arrow-r" d="M 155 -8 L 290 -8" marker-end="url(#arrow-red)"/>
-      <text x="310" y="0" class="t" fill="#c53030">grow &amp; retry</text>
+    <g transform="translate(60,355)">
+      <text x="0" y="0" class="t" fill="#c53030">VLM 빈 응답</text>
+      <path class="arrow-r" d="M 160 -8 L 310 -8" marker-end="url(#arrow-red)"/>
+      <text x="330" y="0" class="t" fill="#c53030">크롭 확장 후 재시도</text>
     </g>
   </g>
 
-  <!-- ====================== PANEL 4 : Two-Stage Role Split ====================== -->
-  <g transform="translate(870,490)" filter="url(#shadow)">
-    <rect class="panel-e" width="800" height="400" rx="18"/>
-    <text x="28" y="52" class="star" fill="#be123c">★ 4. Two-Stage Role Split</text>
+  <!-- ====================== PANEL 4 : 역할 분리 ====================== -->
+  <g transform="translate(870,500)" filter="url(#shadow)">
+    <rect class="panel-e" width="800" height="380" rx="18"/>
+    <text x="28" y="52" class="star" fill="#be123c">★ 4. 역할 분리</text>
 
-    <!-- VLM card -->
     <g transform="translate(40,100)">
-      <rect width="350" height="270" rx="12" fill="#fff" stroke="#6d28d9" stroke-width="3"/>
+      <rect width="350" height="250" rx="12" fill="#fff" stroke="#6d28d9" stroke-width="3"/>
 
-      <!-- eye -->
       <g transform="translate(175,54)">
         <ellipse cx="0" cy="0" rx="46" ry="26" fill="#fff" stroke="#6d28d9" stroke-width="3.5"/>
         <circle  cx="0" cy="0" r="17" fill="#6d28d9"/>
         <circle  cx="-6" cy="-5" r="5" fill="#fff"/>
       </g>
 
-      <text x="175" y="120" text-anchor="middle" class="h" fill="#6d28d9">VLM</text>
-      <text x="175" y="152" text-anchor="middle" class="mono" fill="#6d28d9">qwen3-vl:8b</text>
+      <text x="175" y="124" text-anchor="middle" class="h" fill="#6d28d9">VLM</text>
+      <text x="175" y="154" text-anchor="middle" class="mono" fill="#6d28d9">qwen3-vl:8b</text>
 
-      <text x="30"  y="200" class="t" fill="#2e7d32">✓ read text</text>
-      <text x="30"  y="240" class="t" fill="#c53030">✗ no naming</text>
+      <text x="30"  y="200" class="t" fill="#2e7d32">✓ 글자만 읽기</text>
+      <text x="30"  y="235" class="t" fill="#c53030">✗ 필드 이름 X</text>
     </g>
 
-    <!-- Text-LLM card -->
     <g transform="translate(410,100)">
-      <rect width="350" height="270" rx="12" fill="#fff" stroke="#2e7d32" stroke-width="3"/>
+      <rect width="350" height="250" rx="12" fill="#fff" stroke="#2e7d32" stroke-width="3"/>
 
-      <!-- brain -->
       <g transform="translate(175,54)">
         <path d="M -34 0 C -34 -26 -8 -30 -4 -17 C 4 -32 30 -26 30 -4 C 34 10 22 24 0 24 C -22 24 -34 10 -34 0 Z"
               fill="#fff" stroke="#2e7d32" stroke-width="3.5"/>
@@ -212,35 +197,16 @@
         <path d="M 6 -10 C 10 -8 14 -8 18 -10" stroke="#2e7d32" stroke-width="2.5" fill="none"/>
       </g>
 
-      <text x="175" y="120" text-anchor="middle" class="h" fill="#2e7d32">Text-LLM</text>
-      <text x="175" y="152" text-anchor="middle" class="mono" fill="#2e7d32">qwen3:8b</text>
+      <text x="175" y="124" text-anchor="middle" class="h" fill="#2e7d32">Text-LLM</text>
+      <text x="175" y="154" text-anchor="middle" class="mono" fill="#2e7d32">qwen3:8b</text>
 
-      <text x="30"  y="200" class="t" fill="#2e7d32">✓ classify</text>
-      <text x="30"  y="240" class="t" fill="#2e7d32">✓ describe</text>
+      <text x="30"  y="200" class="t" fill="#2e7d32">✓ 분류</text>
+      <text x="30"  y="235" class="t" fill="#2e7d32">✓ 설명 생성</text>
     </g>
 
-    <!-- divider ✕ -->
-    <g transform="translate(400,235)">
-      <circle cx="0" cy="0" r="22" fill="#ffe8ef" stroke="#be123c" stroke-width="3"/>
-      <text x="0" y="9" text-anchor="middle" class="h" fill="#be123c">✕</text>
-    </g>
-  </g>
-
-  <!-- ====================== RESULTS STRIP ====================== -->
-  <g transform="translate(30,910)" filter="url(#shadow)">
-    <rect class="panel-f" width="1640" height="90" rx="12"/>
-    <g transform="translate(60,60)">
-      <text x="0"    y="0" font-size="40" font-weight="800" fill="#16a34a">100%</text>
-      <text x="130"  y="0" class="t">merge</text>
-
-      <text x="450"  y="0" font-size="40" font-weight="800" fill="#1565c0">12 / 12</text>
-      <text x="630"  y="0" class="t">fields</text>
-
-      <text x="900"  y="0" font-size="40" font-weight="800" fill="#6d28d9">8B</text>
-      <text x="1000" y="0" class="t">local</text>
-
-      <text x="1260" y="0" font-size="40" font-weight="800" fill="#be123c">offline</text>
-      <text x="1430" y="0" class="t">no cloud</text>
+    <g transform="translate(400,225)">
+      <circle cx="0" cy="0" r="24" fill="#ffe8ef" stroke="#be123c" stroke-width="3"/>
+      <text x="0" y="10" text-anchor="middle" class="h" fill="#be123c">✕</text>
     </g>
   </g>
 
