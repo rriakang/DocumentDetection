@@ -1,22 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1700 1040" font-family="'Kalam','Patrick Hand','Comic Sans MS',cursive">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1700 1080" font-family="-apple-system, 'Segoe UI', system-ui, sans-serif">
   <defs>
     <style>
       .bg       { fill: #fbf7ec; }
-      .panel-b  { fill: #fff4e0; stroke: #c56b10; stroke-width: 2.5; }
-      .panel-c  { fill: #e9f8ea; stroke: #2e7d32; stroke-width: 2.5; }
+      .panel-b  { fill: #fff7e8; stroke: #c56b10; stroke-width: 2.5; }
+      .panel-c  { fill: #ecfae8; stroke: #2e7d32; stroke-width: 2.5; }
       .panel-d  { fill: #f4e8ff; stroke: #6d28d9; stroke-width: 3; }
       .panel-e  { fill: #ffe8ef; stroke: #be123c; stroke-width: 3; }
       .panel-f  { fill: #fff9d6; stroke: #a16207; stroke-width: 2.5; }
 
-      .title    { font-size: 40px; font-weight: 700; fill: #111; }
+      .title    { font-size: 40px; font-weight: 800; fill: #111; }
       .subtitle { font-size: 18px; fill: #555; }
-      .h        { font-size: 24px; font-weight: 700; fill: #111; }
-      .star     { font-size: 24px; font-weight: 700; }
-      .t        { font-size: 16px; fill: #222; }
-      .tb       { font-size: 16px; fill: #222; font-weight: 700; }
-      .s        { font-size: 13px; fill: #333; }
-      .sb       { font-size: 13px; fill: #333; font-weight: 700; }
-      .mono     { font-family: 'JetBrains Mono','Menlo',monospace; font-size: 13px; fill: #222; }
+      .h        { font-size: 26px; font-weight: 800; fill: #111; }
+      .star     { font-size: 26px; font-weight: 800; }
+      .t        { font-size: 17px; fill: #222; }
+      .tb       { font-size: 17px; fill: #222; font-weight: 700; }
+      .s        { font-size: 14px; fill: #333; }
+      .sb       { font-size: 14px; fill: #333; font-weight: 700; }
+      .mono     { font-family: 'Menlo', 'Consolas', monospace; font-size: 15px; fill: #222; }
+      .monoL    { font-family: 'Menlo', 'Consolas', monospace; font-size: 17px; font-weight: 700; }
       .arrow    { stroke: #333; stroke-width: 2.5; fill: none; }
       .arrow-r  { stroke: #c53030; stroke-width: 3; fill: none; }
     </style>
@@ -29,230 +30,272 @@
     <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
       <circle cx="20" cy="20" r="1" fill="#d9d0b8"/>
     </pattern>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="3" dy="4" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
   </defs>
 
   <!-- background -->
-  <rect class="bg" width="1700" height="1040"/>
-  <rect width="1700" height="1040" fill="url(#grid)" opacity="0.4"/>
+  <rect class="bg" width="1700" height="1080"/>
+  <rect width="1700" height="1080" fill="url(#grid)" opacity="0.4"/>
 
   <!-- ======================================================= -->
   <!-- TITLE                                                    -->
   <!-- ======================================================= -->
-  <text x="850" y="55" text-anchor="middle" class="title">
+  <text x="850" y="58" text-anchor="middle" class="title">
     Research Method — Image Pipeline for Korean Gov Forms
   </text>
-  <text x="850" y="85" text-anchor="middle" class="subtitle">
-    row detection  →  hybrid OCR  →  VLM fallback  →  text-LLM classification   (local 8B, offline)
+  <text x="850" y="90" text-anchor="middle" class="subtitle">
+    row detection → hybrid OCR → VLM fallback → text-LLM classification    (local 8B, offline)
   </text>
 
   <!-- ======================================================= -->
   <!-- PANEL 1 : Row Detection                                  -->
   <!-- ======================================================= -->
-  <g transform="translate(30,120)">
-    <rect class="panel-b" width="800" height="380" rx="12"/>
-    <text x="24" y="38" class="h">1. Row Detection — pure OpenCV</text>
-    <text x="24" y="62" class="s" fill="#555">split the form image into one-row crops. no ML, no LLM.</text>
+  <g transform="translate(30,125)" filter="url(#shadow)">
+    <rect class="panel-b" width="800" height="390" rx="14"/>
+    <text x="28" y="42" class="h">1.  Row Detection — pure OpenCV</text>
+    <text x="28" y="68" class="s" fill="#555">split the form image into one-row crops. no ML, no LLM.</text>
 
     <!-- mini form sketch -->
-    <g transform="translate(40,95)">
-      <rect x="0" y="0" width="280" height="220" fill="#fff" stroke="#333" stroke-width="2"/>
-      <line x1="0"  y1="44"  x2="280" y2="44"  stroke="#333" stroke-width="1.5"/>
-      <line x1="0"  y1="88"  x2="280" y2="88"  stroke="#333" stroke-width="1.5"/>
-      <line x1="0"  y1="132" x2="280" y2="132" stroke="#333" stroke-width="1.5"/>
-      <line x1="0"  y1="176" x2="280" y2="176" stroke="#333" stroke-width="1.5"/>
-      <line x1="95" y1="0"   x2="95"  y2="220" stroke="#333" stroke-width="1.5"/>
+    <g transform="translate(40,100)">
+      <rect x="0" y="0" width="300" height="240" fill="#fff" stroke="#333" stroke-width="2"/>
+      <line x1="0"   y1="48"  x2="300" y2="48"  stroke="#333" stroke-width="1.5"/>
+      <line x1="0"   y1="96"  x2="300" y2="96"  stroke="#333" stroke-width="1.5"/>
+      <line x1="0"   y1="144" x2="300" y2="144" stroke="#333" stroke-width="1.5"/>
+      <line x1="0"   y1="192" x2="300" y2="192" stroke="#333" stroke-width="1.5"/>
+      <line x1="100" y1="0"   x2="100" y2="240" stroke="#333" stroke-width="1.5"/>
       <!-- squiggles -->
-      <path d="M10,24 Q25,20 40,24 T70,24"  stroke="#333" fill="none"/>
-      <path d="M110,24 Q140,20 170,24 T250,24" stroke="#888" fill="none"/>
-      <path d="M10,68 Q25,64 40,68 T70,68"  stroke="#333" fill="none"/>
-      <path d="M110,68 Q140,64 170,68 T250,68" stroke="#888" fill="none"/>
-      <path d="M10,112 Q25,108 40,112 T70,112" stroke="#333" fill="none"/>
-      <path d="M110,112 Q140,108 170,112 T250,112" stroke="#888" fill="none"/>
-      <path d="M10,156 Q25,152 40,156 T70,156" stroke="#333" fill="none"/>
-      <path d="M110,156 Q140,152 170,156 T250,156" stroke="#888" fill="none"/>
-      <path d="M10,200 Q25,196 40,200 T70,200" stroke="#333" fill="none"/>
+      <path d="M10,26 Q25,22 40,26 T75,26"     stroke="#333" fill="none"/>
+      <path d="M115,26 Q145,22 175,26 T265,26" stroke="#888" fill="none"/>
+      <path d="M10,74 Q25,70 40,74 T75,74"     stroke="#333" fill="none"/>
+      <path d="M115,74 Q145,70 175,74 T265,74" stroke="#888" fill="none"/>
+      <path d="M10,122 Q25,118 40,122 T75,122"     stroke="#333" fill="none"/>
+      <path d="M115,122 Q145,118 175,122 T265,122" stroke="#888" fill="none"/>
+      <path d="M10,170 Q25,166 40,170 T75,170"     stroke="#333" fill="none"/>
+      <path d="M115,170 Q145,166 175,170 T265,170" stroke="#888" fill="none"/>
+      <path d="M10,218 Q25,214 40,218 T75,218"     stroke="#333" fill="none"/>
       <!-- highlight one row -->
-      <rect x="-4" y="85" width="288" height="50" fill="#fde047" fill-opacity="0.45" stroke="#ca8a04" stroke-width="2.5" stroke-dasharray="5 3"/>
+      <rect x="-4" y="93" width="308" height="54" fill="#fde047" fill-opacity="0.45" stroke="#ca8a04" stroke-width="2.5" stroke-dasharray="5 3"/>
     </g>
 
     <!-- arrow -->
-    <path class="arrow" d="M 340 215 L 395 215" marker-end="url(#arrow)"/>
-    <text x="368" y="205" text-anchor="middle" class="s">morph.</text>
+    <path class="arrow" d="M 360 225 L 420 225" marker-end="url(#arrow)"/>
+    <text x="390" y="212" text-anchor="middle" class="s">morph.</text>
 
     <!-- right: steps -->
-    <g transform="translate(405,110)">
-      <text x="0" y="20"  class="tb">1. adaptive threshold</text>
-      <text x="0" y="50"  class="tb">2. horizontal kernel</text>
-      <text x="0" y="80"  class="tb">3. vertical kernel</text>
-      <text x="0" y="110" class="tb">4. merge continuation rows</text>
-      <text x="0" y="150" class="t">output: <tspan class="mono" fill="#c56b10">row_crops[ ]</tspan></text>
+    <g transform="translate(440,130)">
+      <text x="0" y="0"   class="tb">1.  adaptive threshold</text>
+      <text x="0" y="32"  class="tb">2.  horizontal kernel</text>
+      <text x="0" y="64"  class="tb">3.  vertical kernel</text>
+      <text x="0" y="96"  class="tb">4.  merge continuation rows</text>
+      <rect x="-6" y="114" width="320" height="38" rx="6" fill="#fff" stroke="#c56b10" stroke-width="2"/>
+      <text x="8" y="140" class="monoL" fill="#c56b10">output  →  row_crops[ ]</text>
     </g>
 
-    <text x="24" y="360" class="s" fill="#555">why OpenCV? — fast, deterministic, no training data needed.</text>
+    <text x="28" y="370" class="s" fill="#555">why OpenCV? — fast, deterministic, no training data.</text>
   </g>
 
   <!-- ======================================================= -->
   <!-- PANEL 2 : Hybrid OCR                                     -->
   <!-- ======================================================= -->
-  <g transform="translate(870,120)">
-    <rect class="panel-c" width="800" height="380" rx="12"/>
-    <text x="24" y="38" class="h">2. Hybrid OCR — cheap first, refine only if needed</text>
-    <text x="24" y="62" class="s" fill="#555">PaddleOCR is NOT re-run on every row — only when the label is essentially empty.</text>
+  <g transform="translate(870,125)" filter="url(#shadow)">
+    <rect class="panel-c" width="800" height="390" rx="14"/>
+    <text x="28" y="42" class="h">2.  Hybrid OCR — cheap first, refine if needed</text>
+    <text x="28" y="68" class="s" fill="#555">PaddleOCR is not re-run on every row — only when the label is essentially empty.</text>
 
     <!-- EasyOCR block -->
-    <g transform="translate(40,100)">
-      <rect width="220" height="70" rx="8" fill="#fff" stroke="#2e7d32" stroke-width="2"/>
-      <text x="110" y="32" text-anchor="middle" class="tb">EasyOCR</text>
-      <text x="110" y="54" text-anchor="middle" class="s">primary, runs on every row crop</text>
+    <g transform="translate(40,105)">
+      <rect width="240" height="75" rx="8" fill="#fff" stroke="#2e7d32" stroke-width="2.5"/>
+      <text x="120" y="34" text-anchor="middle" class="tb">EasyOCR</text>
+      <text x="120" y="58" text-anchor="middle" class="s">primary · runs on every row</text>
     </g>
 
     <!-- arrow -->
-    <path class="arrow" d="M 260 135 L 315 135" marker-end="url(#arrow)"/>
+    <path class="arrow" d="M 280 143 L 335 143" marker-end="url(#arrow)"/>
 
     <!-- diamond -->
-    <g transform="translate(320,105)">
-      <polygon points="120,0 240,30 120,60 0,30" fill="#fff8d6" stroke="#ca8a04" stroke-width="2"/>
-      <text x="120" y="35" text-anchor="middle" class="sb">label length ≤ 1 char?</text>
+    <g transform="translate(340,108)">
+      <polygon points="120,0 240,35 120,70 0,35" fill="#fff8d6" stroke="#ca8a04" stroke-width="2.5"/>
+      <text x="120" y="40" text-anchor="middle" class="sb">label length ≤ 1 char ?</text>
     </g>
 
     <!-- no branch: to output -->
-    <path class="arrow" d="M 560 135 L 600 135 L 600 285 L 360 285" marker-end="url(#arrow)"/>
-    <text x="605" y="155" class="sb" fill="#2e7d32">no → keep</text>
+    <path class="arrow" d="M 580 143 L 625 143 L 625 300 L 420 300" marker-end="url(#arrow)"/>
+    <text x="630" y="160" class="sb" fill="#2e7d32">no → keep</text>
 
     <!-- yes branch down to Paddle -->
-    <path class="arrow" d="M 440 165 L 440 215" marker-end="url(#arrow)"/>
-    <text x="452" y="193" class="sb" fill="#c53030">yes</text>
+    <path class="arrow" d="M 460 180 L 460 225" marker-end="url(#arrow)"/>
+    <text x="475" y="207" class="sb" fill="#c53030">yes</text>
 
     <!-- PaddleOCR block -->
-    <g transform="translate(320,215)">
-      <rect width="240" height="55" rx="8" fill="#fff" stroke="#c53030" stroke-width="2"/>
-      <text x="120" y="26" text-anchor="middle" class="tb">PaddleOCR</text>
-      <text x="120" y="46" text-anchor="middle" class="s">full-image label refiner</text>
+    <g transform="translate(340,225)">
+      <rect width="240" height="60" rx="8" fill="#fff" stroke="#c53030" stroke-width="2.5"/>
+      <text x="120" y="28" text-anchor="middle" class="tb">PaddleOCR</text>
+      <text x="120" y="50" text-anchor="middle" class="s">full-image label refiner</text>
     </g>
 
-    <!-- merged output -->
-    <g transform="translate(120,310)">
-      <rect width="240" height="50" rx="25" fill="#fff" stroke="#2e7d32" stroke-width="2"/>
-      <text x="120" y="30" text-anchor="middle" class="tb">label · content · full_text</text>
+    <!-- merged output (destination for 'no' branch too) -->
+    <g transform="translate(150,280)">
+      <rect width="270" height="50" rx="25" fill="#fff" stroke="#2e7d32" stroke-width="2.5"/>
+      <text x="135" y="31" text-anchor="middle" class="monoL" fill="#2e7d32">{ label · content · full_text }</text>
     </g>
 
-    <text x="410" y="355" class="s" fill="#555">two engines, used conditionally — not ensembled.</text>
+    <text x="28" y="365" class="s" fill="#555">two engines, used conditionally — not ensembled.</text>
   </g>
 
   <!-- ======================================================= -->
   <!-- PANEL 3 : VLM Crop-Expansion Retry (KEY)                -->
   <!-- ======================================================= -->
-  <g transform="translate(30,520)">
-    <rect class="panel-d" width="800" height="400" rx="14"/>
-    <text x="24" y="40" class="star" fill="#6d28d9">★ 3.  KEY — VLM Crop-Expansion Retry</text>
-    <text x="24" y="65" class="s" fill="#555">when OCR returns &lt; 2 chars, ask qwen3-vl:8b to read the crop. if it answers "" → grow the crop, retry.</text>
+  <g transform="translate(30,535)" filter="url(#shadow)">
+    <rect class="panel-d" width="800" height="420" rx="14"/>
+    <text x="28" y="44" class="star" fill="#6d28d9">★  3.  KEY — VLM Crop-Expansion Retry</text>
+    <text x="28" y="70" class="s" fill="#555">when OCR returns &lt; 2 chars, ask qwen3-vl:8b to read the crop. if it answers "" → grow the crop, retry.</text>
 
-    <!-- triple concentric crops -->
-    <g transform="translate(55,130)">
+    <!-- LEFT : triple concentric crops -->
+    <g transform="translate(50,140)">
       <!-- outermost (attempt 3) -->
-      <rect x="0" y="0" width="360" height="200" fill="#fff" stroke="#6d28d9" stroke-width="2" stroke-dasharray="8 4"/>
-      <text x="180" y="-10" text-anchor="middle" class="sb" fill="#6d28d9">attempt 3  ·  v+25%  h+15%</text>
+      <rect x="0" y="0" width="340" height="190" fill="#fff" stroke="#6d28d9" stroke-width="2.5" stroke-dasharray="9 4"/>
+      <text x="170" y="-12" text-anchor="middle" class="sb" fill="#6d28d9">attempt 3  ·  v +25%   h +15%</text>
       <!-- middle (attempt 2) -->
-      <rect x="40" y="30" width="280" height="140" fill="#fff" stroke="#9333ea" stroke-width="2" stroke-dasharray="6 3"/>
-      <text x="180" y="22" text-anchor="middle" class="sb" fill="#9333ea">attempt 2  ·  v+10%  h+5%</text>
+      <rect x="40" y="28" width="260" height="132" fill="#fff" stroke="#9333ea" stroke-width="2.5" stroke-dasharray="7 3"/>
+      <text x="170" y="22" text-anchor="middle" class="sb" fill="#9333ea">attempt 2  ·  v +10%   h +5%</text>
       <!-- inner (attempt 1 = row bbox) -->
-      <rect x="80" y="70" width="200" height="60" fill="#f4e8ff" stroke="#4c1d95" stroke-width="2.5"/>
-      <text x="180" y="106" text-anchor="middle" class="tb" fill="#4c1d95">attempt 1  ·  margin 0%</text>
-      <path d="M95,96 Q115,92 135,96 T180,96" stroke="#4c1d95" fill="none"/>
+      <rect x="78" y="64" width="184" height="58" fill="#f4e8ff" stroke="#4c1d95" stroke-width="3"/>
+      <text x="170" y="99" text-anchor="middle" class="tb" fill="#4c1d95">attempt 1  ·  0%</text>
     </g>
 
-    <!-- retry arrows -->
-    <g transform="translate(450,155)">
-      <text x="0" y="0" class="tb" fill="#c53030">VLM returns ""</text>
-      <path class="arrow-r" d="M 0 12 L 150 12" marker-end="url(#arrow-red)"/>
-      <text x="0" y="42" class="tb" fill="#c53030">→ expand crop</text>
-      <path class="arrow-r" d="M 0 54 L 150 54" marker-end="url(#arrow-red)"/>
-      <text x="0" y="84" class="tb" fill="#c53030">→ retry (max 3 times)</text>
-    </g>
+    <!-- RIGHT : retry schedule TABLE (replaces unreadable code box) -->
+    <g transform="translate(440,125)">
+      <text x="0" y="0" class="tb" fill="#6d28d9">retry schedule</text>
 
-    <!-- code snippet -->
-    <g transform="translate(435,270)">
-      <rect width="330" height="110" rx="8" fill="#1f2937"/>
-      <text x="14" y="26" class="mono" fill="#fef3c7">schedule = [</text>
-      <text x="34" y="46" class="mono" fill="#d1fae5">(0.00, 0.00),   <tspan fill="#94a3b8"># v, h</tspan></text>
-      <text x="34" y="64" class="mono" fill="#d1fae5">(0.10, 0.05),</text>
-      <text x="34" y="82" class="mono" fill="#d1fae5">(0.25, 0.15),</text>
-      <text x="14" y="100" class="mono" fill="#fef3c7">]</text>
+      <!-- table -->
+      <g transform="translate(0,16)">
+        <!-- header -->
+        <rect x="0"   y="0" width="100" height="40" fill="#6d28d9"/>
+        <rect x="100" y="0" width="115" height="40" fill="#6d28d9"/>
+        <rect x="215" y="0" width="115" height="40" fill="#6d28d9"/>
+        <text x="50"  y="26" text-anchor="middle" class="tb" fill="#fff">attempt</text>
+        <text x="158" y="26" text-anchor="middle" class="tb" fill="#fff">vertical</text>
+        <text x="273" y="26" text-anchor="middle" class="tb" fill="#fff">horizontal</text>
+
+        <!-- row 1 -->
+        <rect x="0"   y="40" width="330" height="38" fill="#fff" stroke="#6d28d9" stroke-width="1.5"/>
+        <text x="50"  y="65" text-anchor="middle" class="monoL" fill="#4c1d95">1</text>
+        <text x="158" y="65" text-anchor="middle" class="monoL" fill="#4c1d95">0%</text>
+        <text x="273" y="65" text-anchor="middle" class="monoL" fill="#4c1d95">0%</text>
+
+        <!-- row 2 -->
+        <rect x="0"   y="78" width="330" height="38" fill="#faf5ff" stroke="#6d28d9" stroke-width="1.5"/>
+        <text x="50"  y="103" text-anchor="middle" class="monoL" fill="#9333ea">2</text>
+        <text x="158" y="103" text-anchor="middle" class="monoL" fill="#9333ea">+10%</text>
+        <text x="273" y="103" text-anchor="middle" class="monoL" fill="#9333ea">+5%</text>
+
+        <!-- row 3 -->
+        <rect x="0"   y="116" width="330" height="38" fill="#fff" stroke="#6d28d9" stroke-width="1.5"/>
+        <text x="50"  y="141" text-anchor="middle" class="monoL" fill="#6d28d9">3</text>
+        <text x="158" y="141" text-anchor="middle" class="monoL" fill="#6d28d9">+25%</text>
+        <text x="273" y="141" text-anchor="middle" class="monoL" fill="#6d28d9">+15%</text>
+      </g>
+
+      <!-- loop arrow + caption -->
+      <g transform="translate(0,200)">
+        <path class="arrow-r" d="M 0 10 L 330 10" marker-end="url(#arrow-red)"/>
+        <text x="0" y="0" class="sb" fill="#c53030">VLM returns ""  →  expand  →  retry (max 3)</text>
+      </g>
     </g>
 
     <!-- why -->
-    <g transform="translate(55,355)">
-      <text x="0" y="0" class="sb" fill="#6d28d9">✎ why this helps:  a ~25% wider crop recovers stroke context without retraining the VLM.</text>
+    <g transform="translate(50,380)">
+      <text x="0" y="0" class="sb" fill="#6d28d9">✎  why this helps — a ~25% wider crop recovers stroke context that the tight row bbox cuts off, without retraining the VLM.</text>
     </g>
   </g>
 
   <!-- ======================================================= -->
   <!-- PANEL 4 : Two-Stage Role Split (KEY)                    -->
   <!-- ======================================================= -->
-  <g transform="translate(870,520)">
-    <rect class="panel-e" width="800" height="400" rx="14"/>
-    <text x="24" y="40" class="star" fill="#be123c">★ 4.  KEY — Two-Stage Role Split</text>
-    <text x="24" y="65" class="s" fill="#555">VLM hallucinates field names. Text-LLM cannot see. So we split the jobs strictly.</text>
+  <g transform="translate(870,535)" filter="url(#shadow)">
+    <rect class="panel-e" width="800" height="420" rx="14"/>
+    <text x="28" y="44" class="star" fill="#be123c">★  4.  KEY — Two-Stage Role Split</text>
+    <text x="28" y="70" class="s" fill="#555">VLM hallucinates field names. Text-LLM cannot see. So the two jobs are kept strictly apart.</text>
 
-    <!-- LEFT: VLM -->
-    <g transform="translate(30,95)">
-      <rect width="355" height="265" rx="10" fill="#fff" stroke="#6d28d9" stroke-width="2.5"/>
-      <text x="178" y="44" text-anchor="middle" font-size="36">👁</text>
-      <text x="178" y="74" text-anchor="middle" class="h" fill="#6d28d9">VLM</text>
-      <text x="178" y="96" text-anchor="middle" class="mono">qwen3-vl:8b</text>
+    <!-- LEFT card : VLM -->
+    <g transform="translate(30,100)">
+      <rect width="360" height="280" rx="10" fill="#fff" stroke="#6d28d9" stroke-width="2.5"/>
 
-      <line x1="24" y1="112" x2="331" y2="112" stroke="#333" stroke-dasharray="4 3"/>
+      <!-- eye icon drawn with SVG -->
+      <g transform="translate(180,46)">
+        <ellipse cx="0" cy="0" rx="40" ry="22" fill="#fff" stroke="#6d28d9" stroke-width="3"/>
+        <circle  cx="0" cy="0" r="14" fill="#6d28d9"/>
+        <circle  cx="-5" cy="-4" r="4" fill="#fff"/>
+      </g>
 
-      <text x="24" y="138" class="tb" fill="#2e7d32">✓ allowed:</text>
-      <text x="36" y="160" class="s">• extract raw text from the row crop</text>
+      <text x="180" y="106" text-anchor="middle" class="h" fill="#6d28d9">VLM</text>
+      <text x="180" y="130" text-anchor="middle" class="mono">qwen3-vl:8b</text>
 
-      <text x="24" y="192" class="tb" fill="#c53030">✗ forbidden:</text>
-      <text x="36" y="214" class="s">• naming the field</text>
-      <text x="36" y="232" class="s">• deciding input vs header</text>
-      <text x="36" y="250" class="s">• translation / explanation</text>
+      <line x1="24" y1="146" x2="336" y2="146" stroke="#333" stroke-dasharray="4 3"/>
+
+      <text x="24" y="174" class="tb" fill="#2e7d32">✓  allowed</text>
+      <text x="40" y="198" class="s">• extract raw text from the row crop</text>
+
+      <text x="24" y="228" class="tb" fill="#c53030">✗  forbidden</text>
+      <text x="40" y="250" class="s">• naming the field</text>
+      <text x="40" y="268" class="s">• deciding input vs header</text>
     </g>
 
-    <!-- RIGHT: Text-LLM -->
-    <g transform="translate(415,95)">
-      <rect width="355" height="265" rx="10" fill="#fff" stroke="#2e7d32" stroke-width="2.5"/>
-      <text x="178" y="44" text-anchor="middle" font-size="36">🧠</text>
-      <text x="178" y="74" text-anchor="middle" class="h" fill="#2e7d32">Text-LLM</text>
-      <text x="178" y="96" text-anchor="middle" class="mono">qwen3:8b</text>
+    <!-- RIGHT card : Text-LLM -->
+    <g transform="translate(410,100)">
+      <rect width="360" height="280" rx="10" fill="#fff" stroke="#2e7d32" stroke-width="2.5"/>
 
-      <line x1="24" y1="112" x2="331" y2="112" stroke="#333" stroke-dasharray="4 3"/>
+      <!-- brain icon drawn with SVG -->
+      <g transform="translate(180,46)">
+        <path d="M -32 0 C -32 -24 -8 -28 -4 -16 C 4 -30 28 -24 28 -4 C 32 8 20 22 0 22 C -20 22 -32 10 -32 0 Z"
+              fill="#fff" stroke="#2e7d32" stroke-width="3"/>
+        <path d="M -4 -16 C -4 -8 -4 0 -4 8" stroke="#2e7d32" stroke-width="2" fill="none"/>
+        <path d="M -18 -6 C -14 -4 -10 -4 -6 -6" stroke="#2e7d32" stroke-width="2" fill="none"/>
+        <path d="M 6 -10 C 10 -8 14 -8 18 -10" stroke="#2e7d32" stroke-width="2" fill="none"/>
+      </g>
 
-      <text x="24" y="138" class="tb" fill="#2e7d32">✓ input:</text>
-      <text x="36" y="160" class="s">• plain list of row texts (no image)</text>
+      <text x="180" y="106" text-anchor="middle" class="h" fill="#2e7d32">Text-LLM</text>
+      <text x="180" y="130" text-anchor="middle" class="mono">qwen3:8b</text>
 
-      <text x="24" y="192" class="tb" fill="#2e7d32">✓ output per field:</text>
-      <text x="36" y="214" class="s">• field_name_ko  +  translated name</text>
-      <text x="36" y="232" class="s">• description  (≤ 15 words)</text>
-      <text x="36" y="250" class="s">• example  +  warning  +  source_rows</text>
+      <line x1="24" y1="146" x2="336" y2="146" stroke="#333" stroke-dasharray="4 3"/>
+
+      <text x="24" y="174" class="tb" fill="#2e7d32">✓  input</text>
+      <text x="40" y="198" class="s">• plain list of row texts  (no image)</text>
+
+      <text x="24" y="228" class="tb" fill="#2e7d32">✓  output per field</text>
+      <text x="40" y="250" class="s">• field_name_ko  +  translated name</text>
+      <text x="40" y="268" class="s">• description · example · warning</text>
     </g>
 
-    <!-- center divider marker -->
-    <text x="400" y="230" text-anchor="middle" font-size="22" font-weight="700" fill="#be123c">✕</text>
-    <text x="400" y="250" text-anchor="middle" class="sb" fill="#be123c">no overlap</text>
+    <!-- center divider ✕ -->
+    <g transform="translate(400,240)">
+      <circle cx="0" cy="0" r="18" fill="#ffe8ef" stroke="#be123c" stroke-width="2.5"/>
+      <text x="0" y="6" text-anchor="middle" class="tb" fill="#be123c">✕</text>
+      <text x="0" y="40" text-anchor="middle" class="sb" fill="#be123c">no overlap</text>
+    </g>
 
-    <!-- bottom note -->
-    <text x="24" y="384" class="sb" fill="#be123c">✎ VLMs are good readers, bad bureaucrats. Text-LLMs are the opposite. Stop forcing one model to do both.</text>
+    <!-- bottom tagline -->
+    <text x="28" y="405" class="sb" fill="#be123c">✎  VLMs are good readers, bad bureaucrats. Text-LLMs are the opposite. Don't force one model to do both.</text>
   </g>
 
   <!-- ======================================================= -->
   <!-- RESULTS strip                                            -->
   <!-- ======================================================= -->
-  <g transform="translate(30,940)">
-    <rect class="panel-f" width="1640" height="80" rx="10"/>
-    <text x="24" y="34" class="tb">Measured — verified by <tspan class="mono">eval/verify_claims.py</tspan></text>
-    <g transform="translate(24,48)">
-      <text x="0"    y="22" font-size="26" font-weight="700" fill="#16a34a">100%</text>
-      <text x="80"   y="22" class="t">multi-row merge (4 / 4, claim ≥ 91%)</text>
+  <g transform="translate(30,975)" filter="url(#shadow)">
+    <rect class="panel-f" width="1640" height="90" rx="12"/>
+    <text x="28" y="32" class="tb">Measured — verified by  <tspan class="mono" font-size="15">eval/verify_claims.py</tspan></text>
 
-      <text x="540"  y="22" font-size="26" font-weight="700" fill="#1565c0">12 / 12</text>
-      <text x="660"  y="22" class="t">field identification (claim ≥ 10 / 12)</text>
+    <g transform="translate(28,50)">
+      <text x="0"    y="28" font-size="30" font-weight="800" fill="#16a34a">100%</text>
+      <text x="90"   y="28" class="t">multi-row merge   (4 / 4, claim ≥ 91%)</text>
 
-      <text x="1100" y="22" font-size="26" font-weight="700" fill="#6d28d9">8B</text>
-      <text x="1160" y="22" class="t">local-only, offline via Ollama</text>
+      <text x="540"  y="28" font-size="30" font-weight="800" fill="#1565c0">12 / 12</text>
+      <text x="680"  y="28" class="t">field identification   (claim ≥ 10 / 12)</text>
+
+      <text x="1120" y="28" font-size="30" font-weight="800" fill="#6d28d9">8B</text>
+      <text x="1180" y="28" class="t">local-only, offline via Ollama</text>
     </g>
   </g>
 
