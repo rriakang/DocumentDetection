@@ -83,6 +83,44 @@ flowchart TD
     style Layer4 fill:#e3f2fd,stroke:#1565c0
 ```
 
+> **Figure 3.** `classify_fields` node — 2-stage role split (VLM = text extraction only, Text-LLM = classification + generation) with VLM crop-expansion retry (margin 0 % → 10 % → 25 %).
+
+```mermaid
+flowchart TD
+    A["Row Crops<br/>from detect_boxes"] --> C1["EasyOCR<br/>(primary, detail=1)"]
+    C1 --> D{"label length ≤ 1?"}
+    D -- "yes" --> C2["PaddleOCR<br/>(full-image refine)"]
+    D -- "no"  --> M["merged OCR<br/>{label, content, full_text}"]
+    C2 --> M
+    M --> E{"full_text < 2 chars?"}
+    E -- "no"  --> P["row texts[1..N]"]
+
+    E -- "yes" --> V1["VLM attempt 1<br/>margin 0%"]
+    V1 -- "empty" --> V2["VLM attempt 2<br/>v+10% · h+5%"]
+    V2 -- "empty" --> V3["VLM attempt 3<br/>v+25% · h+15%"]
+    V1 -- "ok" --> P
+    V2 -- "ok" --> P
+    V3 --> P
+
+    P --> L["Text-LLM (qwen3:8b)<br/>batch classify prompt"]
+    L --> R1["_merge_subfields()<br/>parent/child row merge"]
+    R1 --> R2["_post_filter_fields()<br/>drop admin/header/footer"]
+    R2 --> OUT["field_infos[]"]
+
+    style C1 fill:#eef6ff,stroke:#3b82f6
+    style C2 fill:#eef6ff,stroke:#3b82f6
+    style M  fill:#eef6ff,stroke:#3b82f6
+    style V1 fill:#f3e8ff,stroke:#8b5cf6
+    style V2 fill:#f3e8ff,stroke:#8b5cf6
+    style V3 fill:#f3e8ff,stroke:#8b5cf6
+    style L  fill:#eefcef,stroke:#16a34a
+    style R1 fill:#fff7e6,stroke:#d97706
+    style R2 fill:#fff7e6,stroke:#d97706
+    style OUT fill:#fdecef,stroke:#dc2626
+```
+
+> 더 큰 해상도 · Feature ↔ Implementation 매핑 표는 [`docs/architecture.md`](docs/architecture.md) 참고.
+
 ### Pipeline Modules
 
 | Stage | Module | Description |
