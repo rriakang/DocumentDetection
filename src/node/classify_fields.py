@@ -27,12 +27,18 @@ logger = logging.getLogger(__name__)
 
 
 def _ocr_all_rows(image, rows: list[dict]) -> list[dict]:
-    """모든 행을 OCR하여 라벨/내용/full_text를 추출."""
+    """모든 행을 OCR하여 라벨/내용/full_text를 추출.
+
+    OCR 하이브리드 실패 시 VLM(qwen3-vl) 폴백 활성화:
+    - EasyOCR + PaddleOCR로 전부 빈 응답이면 VLM으로 재추출
+    - VLM 응답이 비었을 경우 크롭 영역 확장 재시도
+    """
     results = []
     for row in rows:
         try:
             ocr = extract_row_label_and_content(
                 image=image, row_bbox=row["bbox"], full_image=image,
+                use_vlm_fallback=True,
             )
             results.append({
                 "label": ocr.get("label", ""),
@@ -86,7 +92,11 @@ SKIP completely (NOT input fields):
 - Long paragraphs of consent/description text (these are NOT fields, they are explanations)
 - Footer (e.g., "...협회 귀중", "본인은 위 기재한...")
 - "구비서류" rows
-- Date/signature rows at the bottom ("2026년 월 일", "신청인", "(인 또는 서명)")
+
+INCLUDE these as fields (the user fills them in):
+- Date fields at the bottom (e.g., "2026년 월 일" → "작성일" field)
+- Signature fields (e.g., "신청인", "(인 또는 서명)" → "신청인 서명" field)
+- Age field next to 주민등록번호 (e.g., "(만  세)" → "만 나이" field)
 
 Output JSON array:
 [

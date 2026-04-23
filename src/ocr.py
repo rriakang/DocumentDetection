@@ -147,13 +147,78 @@ def extract_text_from_image(image: Image.Image) -> str:
     return " ".join(results).strip()
 
 
+def _vlm_extract_text(image: Image.Image) -> str:
+    """VLM(qwen3-vl)으로 행 이미지에서 텍스트 직접 추출.
+
+    OCR이 실패했을 때 폴백으로 사용된다.
+    """
+    try:
+        from src.llm_client import call_ollama_with_image
+        from src.prompts import build_row_ocr_prompt
+        prompt = build_row_ocr_prompt()
+        raw = call_ollama_with_image(prompt, image, max_tokens=256)
+        # VLM 응답 정리: 설명 문장 제거, 실제 텍스트만
+        raw = raw.strip()
+        # "The text says:" 같은 래퍼 제거
+        for prefix in ["The text reads:", "The text says:", "Text:", "text:"]:
+            if raw.startswith(prefix):
+                raw = raw[len(prefix):].strip()
+        # 따옴표 제거
+        raw = raw.strip('"\'`')
+        return raw.strip()
+    except Exception:
+        return ""
+
+
+def _vlm_extract_with_crop_retry(full_image: Image.Image, row_bbox: list,
+                                   max_retries: int = 2) -> str:
+    """VLM 텍스트 추출 — 빈 응답일 경우 크롭 영역을 점진적으로 확장해 재시도.
+
+    재시도 전략:
+    - 1차: 원본 bbox 그대로
+    - 2차: 위아래 margin +10%, 좌우 margin +5% 확장
+    - 3차: 위아래 margin +25%, 좌우 margin +15% 확장
+    """
+    x1, y1, x2, y2 = row_bbox
+    W, H = full_image.width, full_image.height
+    h_row = y2 - y1
+    w_row = x2 - x1
+
+    # 확장 배율 리스트 (vertical, horizontal)
+    expansion_schedule = [
+        (0.0, 0.0),   # 1차 원본
+        (0.10, 0.05),  # 2차
+        (0.25, 0.15),  # 3차
+    ]
+
+    for attempt, (v_pct, h_pct) in enumerate(expansion_schedule[:max_retries + 1]):
+        v_margin = int(h_row * v_pct)
+        h_margin = int(w_row * h_pct)
+
+        crop = full_image.crop((
+            max(0, x1 - h_margin),
+            max(0, y1 - v_margin),
+            min(W, x2 + h_margin),
+            min(H, y2 + v_margin),
+        ))
+
+        text = _vlm_extract_text(crop)
+        # 빈 응답 또는 너무 짧으면 확장 후 재시도
+        if text and len(text.replace(" ", "")) >= 2:
+            return text
+
+    return ""
+
+
 def extract_row_label_and_content(image: Image.Image, row_bbox: list = None,
-                                   full_image: Image.Image = None) -> dict:
+                                   full_image: Image.Image = None,
+                                   use_vlm_fallback: bool = False) -> dict:
     """행 이미지에서 라벨(왼쪽)과 내용(오른쪽)을 분리 추출.
 
     하이브리드 방식:
     1) EasyOCR로 crop 기반 OCR (기본)
     2) EasyOCR 라벨이 빈칸이거나 너무 짧으면 PaddleOCR 전체 이미지 결과로 보정
+    3) (옵션) 위 모두 실패 시 VLM(qwen3-vl)으로 텍스트 추출, 빈 응답 시 크롭 확장 재시도
     """
     # crop 준비
     if full_image is not None and row_bbox is not None:
@@ -176,6 +241,16 @@ def extract_row_label_and_content(image: Image.Image, row_bbox: list = None,
             paddle_label = _paddle_get_label_for_row(full_image, row_bbox)
             if len(paddle_label) > len(easy_label):
                 result["label"] = paddle_label
+
+    # VLM 폴백: OCR이 모두 실패했을 때만 (느리므로 기본은 off)
+    if use_vlm_fallback and full_image is not None and row_bbox is not None:
+        if len(result.get("full_text", "").replace(" ", "")) < 2:
+            vlm_text = _vlm_extract_with_crop_retry(full_image, row_bbox)
+            if vlm_text:
+                result["full_text"] = vlm_text
+                if not result.get("label"):
+                    # VLM 결과의 첫 부분을 라벨로 간주
+                    result["label"] = vlm_text.split()[0] if vlm_text.split() else vlm_text
 
     return result
 

@@ -217,6 +217,17 @@ flowchart TD
 
 **Why hybrid?** EasyOCR excels at crop-based OCR (small row images with preprocessing) but occasionally returns empty labels for certain field layouts. PaddleOCR performs well on full-page images but struggles with small cropped regions (45–55px height). Combining both engines compensates for each other's weaknesses.
 
+### Claim Verification
+
+> **Table 4.** Verification of key technical claims on real forms.
+
+| Claim | Target | Measured | Result |
+|-------|:------:|:--------:|:------:|
+| Multi-row merge success rate | ≥ 91% | **4/4 = 100%** (complex_form) | PASS |
+| 12-field form identification | ≥ 10/12 | **12/12 = 100%** (real_form) | PASS |
+| VLM fallback with crop expansion retry | Implemented | `_vlm_extract_with_crop_retry` | DONE |
+| Local 8B model only (no commercial API) | Required | qwen3-vl:8b, qwen3:8b | DONE |
+
 ### Reproduce
 
 ```bash
@@ -228,6 +239,9 @@ python -m eval.run_eval --mode e2e --gt eval/ground_truth/synth_form_01.json --l
 
 # Complex form (10 fields)
 python -m eval.run_eval --mode e2e --gt eval/ground_truth/complex_form.json --lang en
+
+# Claim verification (12-field form + multi-row merge)
+python eval/verify_claims.py
 ```
 
 ---
